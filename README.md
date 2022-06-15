@@ -8,9 +8,10 @@ It is used in the Electronic Shelf Labels made by SOLUM and rebranded with the n
 
 This Project enables simple Reading and Writing of the Flash/Infopage
 
-It is written for the ESP32 bould should run basically on any SOC with ~8 GPIOS and UART.
+It is written for the ESP32 but should run basically on any SOC with ~8 GPIOS and UART.
 
 ### You need:
+
   Virsual Studio code
   
   PlatformIO
@@ -22,6 +23,7 @@ It is written for the ESP32 bould should run basically on any SOC with ~8 GPIOS 
 
 
 ### How to get Started:
+
   Load the Project folder into Virsual Studio Code, select the Correct COM port in the platformio.ini
   
   Flash it to an ESP32.
