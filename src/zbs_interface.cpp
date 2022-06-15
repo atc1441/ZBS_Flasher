@@ -84,7 +84,7 @@ void ZBS_interface::reset()
 void ZBS_interface::send_byte(uint8_t data)
 {
     digitalWrite(_SS_PIN, LOW);
-    delayMicroseconds(ZBS_spi_delay);
+    delayMicroseconds(5);
     for (int i = 0; i < 8; i++)
     {
         if (data & 0x80)
@@ -97,7 +97,7 @@ void ZBS_interface::send_byte(uint8_t data)
         digitalWrite(_CLK_PIN, LOW);
         data <<= 1;
     }
-    delayMicroseconds(ZBS_spi_delay);
+    delayMicroseconds(2);
     digitalWrite(_SS_PIN, HIGH);
 }
 
@@ -105,7 +105,7 @@ uint8_t ZBS_interface::read_byte()
 {
     uint8_t data = 0x00;
     digitalWrite(_SS_PIN, LOW);
-    delayMicroseconds(ZBS_spi_delay);
+    delayMicroseconds(5);
     for (int i = 0; i < 8; i++)
     {
         data <<= 1;
@@ -116,7 +116,7 @@ uint8_t ZBS_interface::read_byte()
         delayMicroseconds(ZBS_spi_delay);
         digitalWrite(_CLK_PIN, LOW);
     }
-    delayMicroseconds(ZBS_spi_delay);
+    delayMicroseconds(2);
     digitalWrite(_SS_PIN, HIGH);
     return data;
 }
