@@ -1,0 +1,5 @@
+.pio
+.vscode
+build
+dist
+zbs_flasher.spec
