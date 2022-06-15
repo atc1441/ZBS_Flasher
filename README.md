@@ -3,7 +3,7 @@
 ### By Aaron Christophel https://ATCnetz.de
 ### You can support my work via PayPal: https://paypal.me/hoverboard1 this keeps projects like this coming.
 
-An Ardunio / C++ Library and interface to flash the ZBS243 / SEM9110 8051 Microcontroller
+Ardunio / C++ Library and interface to flash the ZBS243 / SEM9110 8051 Microcontroller
 
 The ZBS243 is an 8051 Zigbee Enabled SOC with 64KB of Flash and 1KB of EEPROM Like Infopage.
 
