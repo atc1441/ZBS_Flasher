@@ -13,6 +13,7 @@ It is written for the ESP32 bould should run basically on any SOC with ~8 GPIOS 
   Virsual Studio code
   PlatformIO
   Python > 3.0
+    in Python you need: pyserial ( pip install pyserial )
   
 
 
