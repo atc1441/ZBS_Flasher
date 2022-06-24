@@ -1,13 +1,16 @@
 # ZBS_Flasher
 
-### By Aaron Christophel https://ATCnetz.de
-### You can support my work via PayPal: https://paypal.me/hoverboard1 this keeps projects like this coming.
+### By Aaron Christophel <https://ATCnetz.de>
+
+### You can support my work via PayPal: <https://paypal.me/hoverboard1> this keeps projects like this coming
 
 Ardunio / C++ Library and interface to flash the ZBS243 / SEM9110 8051 Microcontroller
 
 The ZBS243 is an 8051 Zigbee Enabled SOC with 64KB of Flash and 1KB of EEPROM Like Infopage.
 
 It is used in the Electronic Shelf Labels made by SOLUM and rebranded with the name SEM9110
+
+<img width="800" alt="ZBS243 Picture" src="pictures/zbs243_example.jpg">
 
 The debug interface is an SPI like connection and the debug mode is entered via toggling the CLK signal while a reset is done.
 
