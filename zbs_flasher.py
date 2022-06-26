@@ -23,7 +23,7 @@ CMD_ERASE_FLASH = 26
 CMD_ERASE_INFOBLOCK = 27
 
 if(len(sys.argv) != 4):
-    print("Example: COM1 read(i) file.bin, or COM1 write(i) file.bin")
+    print("Example: COM1 read/readI file.bin, or COM1 write/writeI file.bin")
     print("Not the right arguments but here are the... please wait...")
     ports_list = "possible UART ports: "
     for port in serial.tools.list_ports.comports():
