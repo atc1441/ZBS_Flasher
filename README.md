@@ -37,17 +37,13 @@ It is written for the ESP32 but should run basically on any SOC with ~8 GPIOS an
   
   Flash it to an ESP32.
   
-  After that you can use the python tool zbs_flasher.py(zbs_flasher.exe precompiled) with the following parameter:
+  After that you can use the python tool zbs_flasher.py(zbs_flasher.exe precompiled, may triggers Anti Virus software) with the following parameter:
   
     zbs_flasher COMxx read/write/readI/writeI file.bin <- file from where to read or write to
   
   The Pinout on how to connect the ZBS243 SOC is in this README or readable in the main.cpp file and can be changed to any wanted GPIOs of the ESP32.
   
-  The "ZBS_POWER" pin is used to reset the SOC after any debug mode action like flashing etc. the SOC is stuck in debug mode
-  
-  and can only exit from it via a power cycle so it is adived to connect the power to the SOC via an.
-  
-  transistor to automaticaly have it exit the debugmode and run the firmware.
+  The "ZBS_POWER" pin is used to reset the SOC after any debug mode action like flashing etc. the SOC is stuck in debug mode and can only exit from it via a power cycle so it is adviced to connect the power to the SOC via an transistor to automaticaly have it exit the debug mode and run the firmware. The power cycle can also be done manually.
 
 
 # Pins:
@@ -65,5 +61,5 @@ ALL VCC | VCC | ZBS243 Power | 16
 - Before each flashing the Flash/Infopage is always fully erased
 - Flash takes ~130 Seconds for a full file, smaller file are faster of course
 - Full read of flash takes ~70 Seconds
-- on a Flash the data is directly verified on the ESP32, on reading no verify is done so maybe read it twice to make sure its correct
+- on flashing the data is directly verified on the ESP32, on reading no verify is done so maybe read it twice to make sure its correct
 - It could be needed to tweak the transmission speed from the ESP32 to ZBS, this can be done in the zbs_interface.h (ZBS_spi_delay value)
