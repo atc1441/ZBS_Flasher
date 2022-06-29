@@ -10,7 +10,17 @@ The ZBS243 is an 8051 Zigbee Enabled SOC with 64KB of Flash and 1KB of EEPROM Li
 
 It is used in the Electronic Shelf Labels made by SOLUM and rebranded with the name SEM9110
 
+Here is a YouTube video that shows the general function
+https://youtu.be/QqyUzDRQEqA
+
+[![YoutubeVideo](https://img.youtube.com/vi/QqyUzDRQEqA/0.jpg)](https://www.youtube.com/watch?v=QqyUzDRQEqA)
+
+Chip Picture:
+
 <img width="600" alt="ZBS243 Picture" src="pictures/zbs243_example.jpg">
+
+ZBS243 Pinout:
+
 <img width="600" alt="ZBS243 Pinout" src="pictures/zbs243_Pinout.jpg">
 
 The debug interface is an SPI like connection and the debug mode is entered via toggling the CLK signal while a reset is done.
