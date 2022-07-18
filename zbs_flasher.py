@@ -304,11 +304,11 @@ if(read_or_write == 'readI'):
 
 elif(read_or_write == 'write'):
     print("Erasing flash now")
-    if zbs_erase_flash()[0] != 0:
-        print("Some Error erasing")
-        exit()
     if zbs_select_flash_page(0)[0] != 0:
         print("error selecting flash page")
+        exit()
+    if zbs_erase_flash()[0] != 0:
+        print("Some Error erasing")
         exit()
     print("Flashing file: "+file)
     in_file = open(file, "rb")
@@ -349,11 +349,11 @@ elif(read_or_write == 'write'):
 
 elif(read_or_write == 'writeI'):
     print("Erasing infopage now")
-    if zbs_erase_infopage()[0] != 0:
-        print("Some Error erasing")
-        exit()
     if zbs_select_flash_page(1)[0] != 0:
         print("error selecting infopage page")
+        exit()
+    if zbs_erase_infopage()[0] != 0:
+        print("Some Error erasing")
         exit()
     print("Flashing file: "+file)
     in_file = open(file, "rb")
