@@ -7,7 +7,7 @@
 - https://twitter.com/atc1441
 - https://twitter.com/dmitrygr
 
-## For a simple starting point and directl test of the labels use this precompiled firmware for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
+## For a simple starting point and direct testing of the labels use this precompiled firmware for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
 
 [demo_firmware_2.9_33_V1.5.0.0.bin](demo_firmware_2.9_33_V1.5.0.0.bin)
 
