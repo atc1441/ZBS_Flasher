@@ -7,6 +7,14 @@
 - https://twitter.com/atc1441
 - https://twitter.com/dmitrygr
 
+## For a simple starting point and directl test of the labels use this precompiled firmware for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
+
+[demo_firmware_2.9_33_V1.5.0.0.bin](demo_firmware_2.9_33_V1.5.0.0.bin)
+
+You still need to dump the infopage once and add a MAC to 0x10 otherwise it will be just 8 * 0xFF for every label, it will still work but can disrupt things.
+
+It is advised to compile your own version to have a felxible firmware setup, the modified source will be released in the future.
+
 # Download
 Use an Arch Linux or set up a docker container with the archlinux image to build the firmware.
 Other Distros can cause problems, e.g. the firmware does not find the MAC address.

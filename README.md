@@ -23,6 +23,10 @@ ZBS243 Pinout:
 
 <img width="600" alt="ZBS243 Pinout" src="pictures/zbs243_Pinout.jpg">
 
+2.9" amd 1.54" SOLUM Electronic Shelf Label flashing Pinout:
+
+<img width="600" alt="1.54 and 2.9 Pinout" src="pictures/290_154_flash_pinout.jpg">
+
 The debug interface is an SPI like connection and the debug mode is entered via toggling the CLK signal while a reset is done.
 
 Many more infos about the ZBS243 can be found here: [Reverse Engineering an Unknown SOC](https://dmitry.gr/?r=05.Projects&proj=30.%20Reverse%20Engineering%20an%20Unknown%20Microcontroller)
