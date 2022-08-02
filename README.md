@@ -43,6 +43,8 @@ It is written for the ESP32 but should run basically on any SOC with ~8 GPIOS an
   
 # How to get Started
 
+## Flashing "Dmitrys" Firmware: [HowTo](custom-firmware/README.md)
+
   Load the Project folder into Virsual Studio Code, select the Correct COM port in the platformio.ini
   
   Flash it to an ESP32.
