@@ -217,6 +217,8 @@ def zbs_write_flash(addr, len, data):
         answer_array = uart_receive_handler()
         if answer_array[0] == 0 and answer_array[2] == 1:
             return [0]
+        if answer_array[0] == 0 and answer_array[2] == 0:
+            return [1]
         retry -= 1
     return [1]
 
