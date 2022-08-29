@@ -123,7 +123,7 @@ try ch 11
 sleep: 791015
 ```
 
-# 3D printed programming [jig](jig/README.md)
+# 3D printed programming [jig](jig/)
 
 # General info
 
@@ -133,7 +133,7 @@ sleep: 791015
 - on flashing the data is directly verified on the ESP32, on reading no verify is done so maybe read it twice to make sure its correct
 - It could be needed to tweak the transmission speed from the ESP32 to ZBS, this can be done in the zbs_interface.h (ZBS_spi_delay value)
 
-###Arduino-Nano flasher variant:
+### Arduino-Nano flasher variant:
 - If you use an Arduino Nano, you should use a 3.3v version. Some bootlegs are 5v, and while the tags -seem- 5v tolerant, they aren't built for that
 - The Arduino Nano version should work with an m168 or m328 part, update platformio settings accordingly
 - Timings have been adjusted for maximum speed (Down to 76 seconds for a flash upload) I didn't run into problems, but you might. Add some delays in zbs_interface if it doesn't work for you
