@@ -123,7 +123,7 @@ try ch 11
 sleep: 791015
 ```
 
-# 3D printed programming [jig](jig/README.md)
+# 3D printed programming [jig](jig/)
 
 # General info
 
