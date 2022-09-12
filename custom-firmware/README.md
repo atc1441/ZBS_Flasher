@@ -7,7 +7,14 @@
 - https://twitter.com/atc1441
 - https://twitter.com/dmitrygr
 
-## For a simple starting point and direct testing of the labels use this precompiled firmware for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
+# For a simple starting point and direct testing of the labels use this precompiled firmware for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
+
+If you are on windows you need to install MinGW and add it to the Windows PATH, SDCC is included in the folder.
+
+Manual: https://www.ics.uci.edu/~pattis/common/handouts/mingweclipse/mingw.html
+
+
+Precompiled firmware:
 
 V1.5:
 - No greyscale but faster refresh with OTP LUT
