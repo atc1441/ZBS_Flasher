@@ -23,6 +23,7 @@
 #include "cpu.h"
 
 //#define PICTURE_FRAME_FLIP_EVERY_N_CHECKINS		24		//undefine to disable picture frame mode
+#define HARDWARE_UNPAIR									  //undefine to disable hardware unpair
 
 static const uint64_t __code VERSIONMARKER mVersionRom = 0x0000011100000000ull;
 
@@ -996,6 +997,20 @@ void main(void)
 	{
 
 		settingsRead(&mSettings);
+
+		#ifdef HARDWARE_UNPAIR
+		// check if P1.0 is driven low externally; if so, remove pairing info
+		P1DIR |= (1<<0); // P1.0 = input;
+		P1PULL|= (1<<0); // P1.0 = pullup;
+		timerDelay(TIMER_TICKS_PER_SECOND / 1000);
+		if(!(P1&0x01)){
+			pr("Now deleting pairing info...\n");
+			mSettings.isPaired = 0;
+			settingsWrite(&mSettings);
+		}
+		P1PULL&=~(1<<0);
+		#endif
+
 
 		radioRxFilterCfg(mSelfMac, 0x10000, PROTO_PAN_ID);
 
