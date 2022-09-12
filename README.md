@@ -70,7 +70,9 @@ ZBS243 Pin                       |Pin name                       |Name          
 16 | P0_2 | SPI_MiSo |  17 | 12
 17 | P0_3 | SPI_SS |  23 | 10
 22 | RST | RESET |  19 | 7
-ALL VCC | VCC | ZBS243 Power | 16 | 14 through 19
+ALL VCC | VCC | ZBS243 Power | 16 !!!* | 14 through 19
+
+*  do not connect VCC directly to a GPIO only trough some kind of Mosfet or switch!
 
 # Debugging and power options on the Arduino Nano - flasher
 There are some basic options to test the tag while connected to the flasher. Highly experimental! Use a serial terminal on 115200 baud and use hit '?' to see the options.

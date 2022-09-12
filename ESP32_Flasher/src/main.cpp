@@ -13,7 +13,7 @@
 #define ZBS_MoSi 5
 #define ZBS_MiSo 17
 #define ZBS_Reset 19
-#define ZBS_POWER 16
+#define ZBS_POWER 16 //  do not connect directly to a GPIO only trough some kind of Mosfet or switch!
 
 #define ZBS_RXD 4 // Maybe later used to read UART data from the firmware running on the ZBS, not needed at all
 
