@@ -997,6 +997,17 @@ void main(void)
 
 		settingsRead(&mSettings);
 
+		// check if P1.0 is driven low externally; if so, remove pairing info
+		P1DIR |= (1<<0); // P1.0 = input;
+		P1PULL|= (1<<0); // P1.0 = pullup;
+		timerDelay(TIMER_TICKS_PER_SECOND / 100);
+		if(!(P1&0x01)){
+			pr("Now deleting pairing info...");
+			mSettings.isPaired = 0;
+			settingsWrite(&mSettings);
+		}
+
+
 		radioRxFilterCfg(mSelfMac, 0x10000, PROTO_PAN_ID);
 
 		mCi.myMac = mSelfMac;
