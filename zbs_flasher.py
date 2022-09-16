@@ -23,9 +23,9 @@ CMD_ERASE_FLASH = 26
 CMD_ERASE_INFOBLOCK = 27
 
 if(len(sys.argv) < 4):
-    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 921600) ")
-    print("Example: COM1 read file.bin slow_spi 921600 <- will read flash to file.bin with slow SPI and 921600baud")
-    print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 921600baud")
+    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) ")
+    print("Example: COM1 read file.bin slow_spi 115200 <- will read flash to file.bin with slow SPI and 115200 baud")
+    print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 115200 baud")
     print("Not the right arguments but here are the... please wait...")
     ports_list = "possible UART ports: "
     for port in serial.tools.list_ports.comports():
@@ -36,7 +36,7 @@ if(len(sys.argv) < 4):
 usedCom = sys.argv[1]  # "COM5"
 read_or_write = sys.argv[2]
 file = sys.argv[3]
-usedBaud = 921600 
+usedBaud = 115200 
 
 spi_speed = 0
 if len(sys.argv) >= 5:
