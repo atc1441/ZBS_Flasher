@@ -40,6 +40,7 @@ private:
     int ZBS_spi_delay = 1;
     uint8_t _soft_spi = 0;
     uint8_t spi_ready = 0;
+    uint32_t after_byte_delay = 10;
 
     typedef enum
     {

@@ -32,6 +32,14 @@ uint8_t ZBS_interface::begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO
         spiSettings = SPISettings(spi_speed, MSBFIRST, SPI_MODE0);
         spi_ready = 0;
     }
+    if (spi_speed != 8000000)
+    {
+        after_byte_delay = 1000;
+    }
+    else
+    {
+        after_byte_delay = 10;
+    }
     enable_debug();
     return check_connection();
 }
@@ -162,7 +170,7 @@ void ZBS_interface::write_byte(uint8_t cmd, uint8_t addr, uint8_t data)
     send_byte(cmd);
     send_byte(addr);
     send_byte(data);
-    delayMicroseconds(10);
+    delayMicroseconds(after_byte_delay);
 }
 
 uint8_t ZBS_interface::read_byte(uint8_t cmd, uint8_t addr)
@@ -171,7 +179,7 @@ uint8_t ZBS_interface::read_byte(uint8_t cmd, uint8_t addr)
     send_byte(cmd);
     send_byte(addr);
     data = read_byte();
-    delayMicroseconds(10);
+    delayMicroseconds(after_byte_delay);
     return data;
 }
 
@@ -181,7 +189,7 @@ void ZBS_interface::write_flash(uint16_t addr, uint8_t data)
     send_byte(addr >> 8);
     send_byte(addr);
     send_byte(data);
-    delayMicroseconds(10);
+    delayMicroseconds(after_byte_delay);
 }
 
 uint8_t ZBS_interface::read_flash(uint16_t addr)
@@ -191,7 +199,7 @@ uint8_t ZBS_interface::read_flash(uint16_t addr)
     send_byte(addr >> 8);
     send_byte(addr);
     data = read_byte();
-    delayMicroseconds(10);
+    delayMicroseconds(after_byte_delay);
     return data;
 }
 

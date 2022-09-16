@@ -23,7 +23,9 @@ CMD_ERASE_FLASH = 26
 CMD_ERASE_INFOBLOCK = 27
 
 if(len(sys.argv) < 4):
-    print("Example: COM1 read/readI file.bin, or COM1 write/writeI file.bin baudrate(default 921600)")
+    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 921600) ")
+    print("Example: COM1 read file.bin slow_spi 921600 <- will read flash to file.bin with slow SPI and 921600baud")
+    print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 921600baud")
     print("Not the right arguments but here are the... please wait...")
     ports_list = "possible UART ports: "
     for port in serial.tools.list_ports.comports():
@@ -35,9 +37,17 @@ usedCom = sys.argv[1]  # "COM5"
 read_or_write = sys.argv[2]
 file = sys.argv[3]
 usedBaud = 921600 
+
+spi_speed = 0
 if len(sys.argv) >= 5:
-    usedBaud = int(sys.argv[4])
+    if sys.argv[4].lower() == "slow_spi".lower():
+        print("Using slow SPI speed")
+        spi_speed = 1
+
+if len(sys.argv) >= 6:
+    usedBaud = int(sys.argv[5])
     print("Using custom baudrate: " + str(usedBaud))
+
     
 serialPort = serial.Serial(usedCom, usedBaud, serial.EIGHTBITS,
                            serial.PARITY_NONE, serial.STOPBITS_ONE, timeout=2)
@@ -132,7 +142,7 @@ def zbs_read_version():
 def zbs_init():
     retry = 3
     while(retry):
-        send_cmd(CMD_ZBS_BEGIN, bytearray([]))
+        send_cmd(CMD_ZBS_BEGIN, bytearray([spi_speed&1]))
         answer_array = uart_receive_handler()
         #print(' '.join(format(x, '02x') for x in answer_array))
         if answer_array[0] == 0 and answer_array[2] == 1:
@@ -264,14 +274,14 @@ if(read_or_write.lower() == 'read'.lower()):
         position += curr_len
         len_left -= curr_len
         print(str(position) + " /   " + str(0x10000) + "  " +
-              str(int((position/0x10000)*100)) + "% " + str(int((millis() - reading_start_time) / 1000)), end='\r', flush=True)
+              str(int((position/0x10000)*100)) + "% " + str(int((millis() - reading_start_time) / 1000)) + " seconds", end='\r', flush=True)
     print("")
     print("Reading flash done, now saving the file")
     file = open(file, "wb")
     file.write(bytearray(dump_buffer))
     file.close()
     print("Saving file done, it took " +
-          str(int((millis()-reading_start_time)/1000)))
+          str(int((millis()-reading_start_time)/1000)) + " seconds")
 
 if(read_or_write.lower() == 'readI'.lower()):
     if zbs_select_flash_page(1)[0] != 0:
@@ -298,14 +308,14 @@ if(read_or_write.lower() == 'readI'.lower()):
         position += curr_len
         len_left -= curr_len
         print(str(position) + " /   " + str(0x400) + "  " +
-              str(int((position/0x400)*100)) + "% " + str(int((millis() - reading_start_time) / 1000)), end='\r', flush=True)
+              str(int((position/0x400)*100)) + "% " + str(int((millis() - reading_start_time) / 1000)) + " seconds", end='\r', flush=True)
     print("")
     print("Reading infopage done, now saving the file")
     file = open(file, "wb")
     file.write(bytearray(dump_buffer))
     file.close()
     print("Saving file done, it took " +
-          str(int((millis()-reading_start_time)/1000)))
+          str(int((millis()-reading_start_time)/1000)) + " seconds")
 
 
 elif(read_or_write.lower() == 'write'.lower()):
@@ -342,14 +352,14 @@ elif(read_or_write.lower() == 'write'.lower()):
         if should_write == 1:
             if zbs_write_flash(position, curr_len, data[position:position+curr_len])[0] != 0:
                 print("error writing flash at " + str(position) + " /   " + str(file_size) + "  " +
-                      str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)))
+                      str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds")
                 exit()
         position += curr_len
         len_left -= curr_len
         print(str(position) + " /   " + str(file_size) + "  " +
-              str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)), end='\r', flush=True)
+              str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds", end='\r', flush=True)
     print("")
-    print("Writing done, it took " + str(int((millis()-write_start_time)/1000)))
+    print("Writing done, it took " + str(int((millis()-write_start_time)/1000)) + " seconds")
     print("Verfiy done and OK")
 
 
@@ -387,14 +397,14 @@ elif(read_or_write.lower() == 'writeI'.lower()):
         if should_write == 1:
             if zbs_write_flash(position, curr_len, data[position:position+curr_len])[0] != 0:
                 print("error writing infopage at " + str(position) + " /   " + str(file_size) + "  " +
-                      str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)))
+                      str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds")
                 exit()
         position += curr_len
         len_left -= curr_len
         print(str(position) + " /   " + str(file_size) + "  " +
-              str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)), end='\r', flush=True)
+              str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds", end='\r', flush=True)
     print("")
-    print("Writing done, it took " + str(int((millis()-write_start_time)/1000)))
+    print("Writing done, it took " + str(int((millis()-write_start_time)/1000)) + " seconds")
     print("Verfiy done and OK")
 
 if zbs_reset()[0] == 0:
