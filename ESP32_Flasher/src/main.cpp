@@ -24,7 +24,7 @@ uint32_t spi_speed = 8000000; // Speed for hardware spi, default 8MHz
 uint16_t addr = 0;
 void setup()
 {
-  Serial.begin(115200);
+  Serial.begin(921600);
   // Serial.printf("Welcome\r\n");
 
   // Serial1.begin(115200, SERIAL_8N1, -1, 12);
