@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <stdint.h>
+#include <SPI.h>
 
 /*   Autor: Aaron Christophel ATCnetz.de   */
 #include <Arduino.h>
@@ -8,7 +9,7 @@
 class ZBS_interface
 {
 public:
-    uint8_t begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO, uint8_t RESET, uint8_t POWER = -1);
+    uint8_t begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO, uint8_t RESET, uint8_t POWER = -1, uint8_t soft_spi = 0, uint32_t spi_speed = 8000000);
     void set_power(uint8_t state);
     void enable_debug();
     void reset();
@@ -28,6 +29,8 @@ public:
     void erase_infoblock();
 
 private:
+    SPIClass *spi = NULL;
+    SPISettings spiSettings;
     uint8_t _SS_PIN = -1;
     uint8_t _CLK_PIN = -1;
     uint8_t _MOSI_PIN = -1;
@@ -35,6 +38,8 @@ private:
     uint8_t _RESET_PIN = -1;
     uint8_t _POWER_PIN = -1;
     int ZBS_spi_delay = 1;
+    uint8_t _soft_spi = 0;
+    uint8_t spi_ready = 0;
 
     typedef enum
     {

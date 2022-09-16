@@ -22,8 +22,8 @@ CMD_WRITE_SFR = 25
 CMD_ERASE_FLASH = 26
 CMD_ERASE_INFOBLOCK = 27
 
-if(len(sys.argv) != 4):
-    print("Example: COM1 read/readI file.bin, or COM1 write/writeI file.bin")
+if(len(sys.argv) < 4):
+    print("Example: COM1 read/readI file.bin, or COM1 write/writeI file.bin baudrate(default 921600)")
     print("Not the right arguments but here are the... please wait...")
     ports_list = "possible UART ports: "
     for port in serial.tools.list_ports.comports():
@@ -34,7 +34,11 @@ if(len(sys.argv) != 4):
 usedCom = sys.argv[1]  # "COM5"
 read_or_write = sys.argv[2]
 file = sys.argv[3]
-usedBaud = 115200
+usedBaud = 921600 
+if len(sys.argv) >= 5:
+    usedBaud = int(sys.argv[4])
+    print("Using custom baudrate: " + str(usedBaud))
+    
 serialPort = serial.Serial(usedCom, usedBaud, serial.EIGHTBITS,
                            serial.PARITY_NONE, serial.STOPBITS_ONE, timeout=2)
 print('Using port: {}'.format(usedCom))
@@ -235,7 +239,7 @@ if zbs_init()[0] != 0:
     print("Some Error in init")
     exit()
 
-if(read_or_write == 'read'):
+if(read_or_write.lower() == 'read'.lower()):
     if zbs_select_flash_page(0)[0] != 0:
         print("error selecting flash page")
         exit()
@@ -269,7 +273,7 @@ if(read_or_write == 'read'):
     print("Saving file done, it took " +
           str(int((millis()-reading_start_time)/1000)))
 
-if(read_or_write == 'readI'):
+if(read_or_write.lower() == 'readI'.lower()):
     if zbs_select_flash_page(1)[0] != 0:
         print("error selecting infopage page")
         exit()
@@ -304,7 +308,7 @@ if(read_or_write == 'readI'):
           str(int((millis()-reading_start_time)/1000)))
 
 
-elif(read_or_write == 'write'):
+elif(read_or_write.lower() == 'write'.lower()):
     print("Erasing flash now")
     if zbs_select_flash_page(0)[0] != 0:
         print("error selecting flash page")
@@ -349,7 +353,7 @@ elif(read_or_write == 'write'):
     print("Verfiy done and OK")
 
 
-elif(read_or_write == 'writeI'):
+elif(read_or_write.lower() == 'writeI'.lower()):
     print("Erasing infopage now")
     if zbs_select_flash_page(1)[0] != 0:
         print("error selecting infopage page")

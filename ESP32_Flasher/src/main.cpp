@@ -17,7 +17,9 @@
 
 #define ZBS_RXD 4 // Maybe later used to read UART data from the firmware running on the ZBS, not needed at all
 
-uint32_t FLASHER_VERSION = 0x00000010;
+uint32_t FLASHER_VERSION = 0x00000020;
+
+uint32_t spi_speed = 8000000; // Speed for hardware spi, default 8MHz
 
 uint16_t addr = 0;
 void setup()

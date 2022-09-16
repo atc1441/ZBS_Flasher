@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "zbs_interface.h"
+#include <SPI.h>
 
-uint8_t ZBS_interface::begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO, uint8_t RESET, uint8_t POWER)
+uint8_t ZBS_interface::begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO, uint8_t RESET, uint8_t POWER, uint8_t soft_spi, uint32_t spi_speed)
 {
     _SS_PIN = SS;
     _CLK_PIN = CLK;
@@ -13,18 +14,24 @@ uint8_t ZBS_interface::begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO
     _MISO_PIN = MISO;
     _RESET_PIN = RESET;
     _POWER_PIN = POWER;
+    _soft_spi = soft_spi;
 
     pinMode(_SS_PIN, OUTPUT);
+    pinMode(_RESET_PIN, OUTPUT);
+    digitalWrite(_SS_PIN, HIGH);
+    digitalWrite(_RESET_PIN, HIGH);
+    set_power(ZBS_ON);
     pinMode(_CLK_PIN, OUTPUT);
     pinMode(_MOSI_PIN, OUTPUT);
     pinMode(_MISO_PIN, INPUT);
-    pinMode(_RESET_PIN, OUTPUT);
-    digitalWrite(_SS_PIN, HIGH);
     digitalWrite(_CLK_PIN, LOW);
     digitalWrite(_MOSI_PIN, HIGH);
-    digitalWrite(_RESET_PIN, HIGH);
-    set_power(ZBS_ON);
-
+    if (!_soft_spi)
+    {
+        spi = new SPIClass(VSPI);
+        spiSettings = SPISettings(spi_speed, MSBFIRST, SPI_MODE0);
+        spi_ready = 0;
+    }
     enable_debug();
     return check_connection();
 }
@@ -85,17 +92,32 @@ void ZBS_interface::send_byte(uint8_t data)
 {
     digitalWrite(_SS_PIN, LOW);
     delayMicroseconds(5);
-    for (int i = 0; i < 8; i++)
+    if (_soft_spi)
     {
-        if (data & 0x80)
-            digitalWrite(_MOSI_PIN, HIGH);
-        else
-            digitalWrite(_MOSI_PIN, LOW);
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, HIGH);
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, LOW);
-        data <<= 1;
+        for (int i = 0; i < 8; i++)
+        {
+            if (data & 0x80)
+                digitalWrite(_MOSI_PIN, HIGH);
+            else
+                digitalWrite(_MOSI_PIN, LOW);
+            delayMicroseconds(ZBS_spi_delay);
+            digitalWrite(_CLK_PIN, HIGH);
+            delayMicroseconds(ZBS_spi_delay);
+            digitalWrite(_CLK_PIN, LOW);
+            data <<= 1;
+        }
+    }
+    else
+    {
+        if (!spi_ready)
+        {
+            spi_ready = 1;
+            spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
+        }
+        spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
+        spi->beginTransaction(spiSettings);
+        spi->transfer(data);
+        spi->endTransaction();
     }
     delayMicroseconds(2);
     digitalWrite(_SS_PIN, HIGH);
@@ -106,15 +128,29 @@ uint8_t ZBS_interface::read_byte()
     uint8_t data = 0x00;
     digitalWrite(_SS_PIN, LOW);
     delayMicroseconds(5);
-    for (int i = 0; i < 8; i++)
+    if (_soft_spi)
     {
-        data <<= 1;
-        if (digitalRead(_MISO_PIN))
-            data |= 1;
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, HIGH);
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, LOW);
+        for (int i = 0; i < 8; i++)
+        {
+            data <<= 1;
+            if (digitalRead(_MISO_PIN))
+                data |= 1;
+            delayMicroseconds(ZBS_spi_delay);
+            digitalWrite(_CLK_PIN, HIGH);
+            delayMicroseconds(ZBS_spi_delay);
+            digitalWrite(_CLK_PIN, LOW);
+        }
+    }
+    else
+    {
+        if (!spi_ready)
+        {
+            spi_ready = 1;
+            spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
+        }
+        spi->beginTransaction(spiSettings);
+        data = spi->transfer(0xff);
+        spi->endTransaction();
     }
     delayMicroseconds(2);
     digitalWrite(_SS_PIN, HIGH);
@@ -126,7 +162,7 @@ void ZBS_interface::write_byte(uint8_t cmd, uint8_t addr, uint8_t data)
     send_byte(cmd);
     send_byte(addr);
     send_byte(data);
-    delay(1);
+    delayMicroseconds(10);
 }
 
 uint8_t ZBS_interface::read_byte(uint8_t cmd, uint8_t addr)
@@ -135,7 +171,7 @@ uint8_t ZBS_interface::read_byte(uint8_t cmd, uint8_t addr)
     send_byte(cmd);
     send_byte(addr);
     data = read_byte();
-    delay(1);
+    delayMicroseconds(10);
     return data;
 }
 
@@ -145,7 +181,7 @@ void ZBS_interface::write_flash(uint16_t addr, uint8_t data)
     send_byte(addr >> 8);
     send_byte(addr);
     send_byte(data);
-    delay(1);
+    delayMicroseconds(10);
 }
 
 uint8_t ZBS_interface::read_flash(uint16_t addr)
@@ -155,7 +191,7 @@ uint8_t ZBS_interface::read_flash(uint16_t addr)
     send_byte(addr >> 8);
     send_byte(addr);
     data = read_byte();
-    delay(1);
+    delayMicroseconds(10);
     return data;
 }
 
