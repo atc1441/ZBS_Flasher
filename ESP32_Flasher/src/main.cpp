@@ -157,7 +157,7 @@ void handle_uart_cmd(uint8_t cmd, uint8_t *cmd_buff, uint8_t len)
     ESP.restart();
     break;
   case CMD_ZBS_BEGIN:
-    temp_buff[0] = zbs.begin(ZBS_SS, ZBS_CLK, ZBS_MoSi, ZBS_MiSo, ZBS_Reset, ZBS_POWER);
+    temp_buff[0] = zbs.begin(ZBS_SS, ZBS_CLK, ZBS_MoSi, ZBS_MiSo, ZBS_Reset, ZBS_POWER, spi_speed);
     send_uart_answer(cmd, temp_buff, 1);
     break;
   case CMD_RESET_ZBS:
