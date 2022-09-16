@@ -130,10 +130,10 @@ sleep: 791015
 # General info
 
 - Before each flashing the Flash/Infopage is always fully erased
-- Flash takes ~130 Seconds for a full file, smaller file are faster of course
-- Full read of flash takes ~70 Seconds
+- Flash takes ~12 Seconds for a full file, smaller file are faster of course
+- Full read of flash takes ~12 Seconds
 - on flashing the data is directly verified on the ESP32, on reading no verify is done so maybe read it twice to make sure its correct
-- It could be needed to tweak the transmission speed from the ESP32 to ZBS, this can be done in the zbs_interface.h (ZBS_spi_delay value)
+- It could be needed to tweak the transmission speed from the ESP32 to ZBS, this can be done in the zbs_interface.h (ZBS_spi_delay value), in the newest version hardware SPI is used so maybe reduce the SPI-speed if needed
 
 ### Arduino-Nano flasher variant:
 - If you use an Arduino Nano, you should use a 3.3v version. Some bootlegs are 5v, and while the tags -seem- 5v tolerant, they aren't built for that
