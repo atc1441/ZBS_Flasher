@@ -200,36 +200,22 @@ void ZBS_interface::clear_screen(uint16_t time) {
 }
 
 void ZBS_interface::send_byte(uint8_t data) {
+    SPCR |= (1 << SPE) | (1 << MSTR) | (1 << SPR0);
     digitalWrite(_SS_PIN, LOW);
-    delayMicroseconds(1);  // was 5
-    for (int i = 0; i < 8; i++) {
-        if (data & 0x80)
-            digitalWrite(_MOSI_PIN, HIGH);
-        else
-            digitalWrite(_MOSI_PIN, LOW);
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, HIGH);
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, LOW);
-        data <<= 1;
-    }
+    SPDR = data;
+    while (!(SPSR & (1 << SPIF)))
+        ;
     digitalWrite(_SS_PIN, HIGH);
 }
 
 uint8_t ZBS_interface::read_byte() {
     uint8_t data = 0x00;
     digitalWrite(_SS_PIN, LOW);
-    delayMicroseconds(1);  // 5
-    for (int i = 0; i < 8; i++) {
-        data <<= 1;
-        if (digitalRead(_MISO_PIN))
-            data |= 1;
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, HIGH);
-        delayMicroseconds(ZBS_spi_delay);
-        digitalWrite(_CLK_PIN, LOW);
-    }
+    SPDR = 0x00;
+    while (!(SPSR & (1 << SPIF)))
+        ;
     digitalWrite(_SS_PIN, HIGH);
+    data = SPDR;
     return data;
 }
 

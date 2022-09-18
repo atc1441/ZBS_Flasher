@@ -21,22 +21,27 @@ CMD_READ_SFR = 24
 CMD_WRITE_SFR = 25
 CMD_ERASE_FLASH = 26
 CMD_ERASE_INFOBLOCK = 27
+CMD_SAVE_MAC_FROM_FW = 40
 
-if(len(sys.argv) < 4):
-    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) ")
-    print("Example: COM1 read file.bin slow_spi 115200 <- will read flash to file.bin with slow SPI and 115200 baud")
-    print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 115200 baud")
-    print("Not the right arguments but here are the... please wait...")
-    ports_list = "possible UART ports: "
-    for port in serial.tools.list_ports.comports():
-        ports_list += port.device + " "
-    print(ports_list)
-    exit()
-
-usedCom = sys.argv[1]  # "COM5"
-read_or_write = sys.argv[2]
-file = sys.argv[3]
-usedBaud = 115200 
+if((len(sys.argv)==3) and (sys.argv[2].lower() == "mac".lower())):
+    usedCom = sys.argv[1]  # "COM5"
+    read_or_write = sys.argv[2]
+else:
+    if (len(sys.argv) < 4):
+        print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) ")
+        print("Example: COM1 read file.bin slow_spi 115200 <- will read flash to file.bin with slow SPI and 115200 baud")
+        print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 115200 baud")
+        print("Not the right arguments but here are the... please wait...")
+        ports_list = "possible UART ports: "
+        for port in serial.tools.list_ports.comports():
+            ports_list += port.device + " "
+        print(ports_list)
+        exit()
+    usedCom = sys.argv[1]  # "COM5"
+    read_or_write = sys.argv[2]
+    file = sys.argv[3]
+    
+usedBaud = 115200
 
 spi_speed = 0
 if len(sys.argv) >= 5:
@@ -247,6 +252,15 @@ else:
 
 if zbs_init()[0] != 0:
     print("Some Error in init")
+    exit()
+
+if (read_or_write.lower() == 'mac'.lower()):
+    send_cmd(CMD_SAVE_MAC_FROM_FW, bytearray([]))
+    answer_array = uart_receive_handler()
+    if answer_array[2] == 1:
+        print("Saved MAC from stock FW to infoblock, ready to flash custom firmware")
+        exit()
+    print("Error saving mac from stock FW to infoblock")
     exit()
 
 if(read_or_write.lower() == 'read'.lower()):
