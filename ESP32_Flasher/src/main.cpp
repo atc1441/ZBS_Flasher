@@ -137,6 +137,7 @@ typedef enum
   CMD_WRITE_SFR = 25,
   CMD_ERASE_FLASH = 26,
   CMD_ERASE_INFOBLOCK = 27,
+  CMD_SAVE_MAC_FROM_FW = 40,
 } ZBS_UART_PROTO;
 
 uint8_t temp_buff[0x200] = {0};
@@ -256,6 +257,82 @@ void handle_uart_cmd(uint8_t cmd, uint8_t *cmd_buff, uint8_t len)
     zbs.erase_infoblock();
     temp_buff[0] = 1;
     send_uart_answer(cmd, temp_buff, 1);
+    break;
+  case CMD_SAVE_MAC_FROM_FW:
+    uint8_t* temp = nullptr;
+    zbs.select_flash(0);
+    // get original mac (first few bytes) from stock firmware
+    temp_buff[0] = 0;
+    temp_buff[1] = 0;
+    bool validMac = true;
+    for (uint8_t c = 0; c < 6; c++) {
+        temp_buff[c + 2] = zbs.read_flash(0xFC06 + c);
+    }
+    // try to recognize device type by reading a part of the flash
+    temp = (uint8_t *)calloc(8, 1);
+    for (uint8_t c = 0; c < 8; c++) {
+        temp[c] = zbs.read_flash(0x08 + c);
+    }
+    const uint8_t val29[8] = {0x7d, 0x22, 0xff, 0x02, 0xa4, 0x58, 0xf0, 0x90};
+    const uint8_t val154[8] = {0xa1, 0x23, 0x22, 0x02, 0xa4, 0xc3, 0xe4, 0xf0};
+    if (memcmp(temp, val29, 8) == 0) {
+        // 2.9" 033
+        temp_buff[6] = 0x3B;
+        temp_buff[7] = 0x10;
+    } else if (memcmp(temp, val154, 8) == 0) {
+        // 1.54" 033
+        temp_buff[6] = 0x34;
+        temp_buff[7] = 0x10;
+    } else {
+        // not supported...
+        validMac = false;  // can't assume the mac we read makes any sense...
+        temp_buff[6] = 0xFF;
+        temp_buff[7] = 0xFF;
+    }
+    free(temp);
+    // calculate last nibble (checksum)
+    uint8_t xorchk = 0;
+    for (uint8_t c = 2; c < 8; c++) {
+        xorchk ^= (temp_buff[c] & 0x0F);
+        xorchk ^= (temp_buff[c] >> 4);
+    }
+    temp_buff[7] |= xorchk;
+
+    // check if there's already a mac in the infoblock
+    zbs.select_flash(1);  // select infoblock
+    bool infoblockEmpty = true;
+    for (uint8_t c = 0; c < 8; c++) {
+        uint8_t check = zbs.read_flash(0x10 + c);
+        if (check != 0xFF) infoblockEmpty = false;
+    }
+
+    if (infoblockEmpty && validMac) {
+        // succes!
+        for (uint8_t c = 0; c < 8; c++) {
+            // write mac directly to infoblock without erasing; the bytes should all be 0xFF anyway
+            zbs.write_flash(0x17 - c, temp_buff[c]);
+        }
+        temp_buff[0] = 1;
+        send_uart_answer(cmd, temp_buff, 1);
+    } else if (!infoblockEmpty) {
+        bool macAlreadyMatches = true;
+        for (uint8_t c = 0; c < 8; c++) {
+            // check if the values match
+            if (temp_buff[c] != zbs.read_flash(0x17 - c))
+                macAlreadyMatches = false;
+        }
+        if (macAlreadyMatches) {
+            temp_buff[0] = 1;
+            send_uart_answer(cmd, temp_buff, 1);
+        } else {
+            // fail
+            temp_buff[0] = 0;
+            send_uart_answer(cmd, temp_buff, 1);
+        }
+    } else {
+        temp_buff[0] = 0;
+        send_uart_answer(cmd, temp_buff, 1);
+    }
     break;
   }
 }
