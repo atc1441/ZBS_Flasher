@@ -1,20 +1,8 @@
-# Intro
-### This is a step by step guide on how to build the firmware for Solum SEM9110 alias ZBS243 Tags under Linux or Windows (Docker), that is talked about in [Dmitrys blog](http://dmitry.gr/?r=05.Projects&proj=29.%20eInk%20Price%20Tags).
-
-> **_NOTE:_**  If you use Docker, you should know how to use it, especially how to get the copied file from the Docker container afterwards. Dealing with Docker is not covered here.
-
-### Credits:
-- https://twitter.com/atc1441
-- https://twitter.com/dmitrygr
-
-# For a simple starting point and direct testing of the labels use this precompiled firmware for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
-
-If you are on windows you need to install MinGW and add it to the Windows PATH, SDCC is included in the folder.
-
-Manual: https://www.ics.uci.edu/~pattis/common/handouts/mingweclipse/mingw.html
 
 
-Precompiled firmware:
+
+# Precompiled firmware
+## For a simple starting point and direct testing of the labels use this precompiled firmwares for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
 
 V1.5:
 - No greyscale but faster refresh with OTP LUT
@@ -27,14 +15,45 @@ V1.7:
 
 [demo_firmware_2.9_33_V1.7.0.0.bin](demo_firmware_2.9_33_V1.7.0.0.bin)
 
-The source code including all the modifications can be found in this folder on GitHub
+V1.8:
+- On Error it will show it on the display before going into an endless loop
+- After a new Pairing it will show the last valid image again instead of erasing everything
+- HW_Upair option via P1.0 Pin added
+
+[demo_firmware_2.9_33_V1.8.0.0.bin](demo_firmware_2.9_33_V1.8.0.0.bin)
+
+The source of the newest firmware is from this repo
+
+## Adding a MAC
+Since the custom firmware expects a 8 byte MAC address in the Infopage of the SOC at 0x10 offset it is needed write it there, here is how:
+
+The flashing of a MAC can happen before or after flashing the firmware.
+
+Step 1. Dump the current infopage with the zbs_flasher via "zbs_flasher COMxx readI dump_infopage.bin"
+
+Step 2. Use a tool like "HxD" on windows to edit the "dump_infopage.bin" and put in a random 8 byte MAC at the second line / offset 0x10 and save the file
+
+Step 3. Flash the modified file back via "zbs_flasher COMxx writeI dump_infopage.bin"
 
 
-You still need to dump the infopage once and add a MAC to 0x10 otherwise it will be just 8 * 0xFF for every label, it will still work but can disrupt things.
+# Compiling on Windows
+To get started under windows downlaod and install MinGW as descripted here: https://www.ics.uci.edu/~pattis/common/handouts/mingweclipse/mingw.html
 
-It is advised to compile your own version to have a felxible firmware setup.
+Add both the "C:\MinGW\msys\1.0\bin" and "C:\MinGW\bin" folder to your system PATH!, you may also want to add the ZBS_Flasher.exe folder to it for simplicity.
 
-# Download
+after having installed MinGW restart your Mashine and test it via a CMD line by entering "make" and it should not show any errors.
+
+Clone this repository and CD into the "firmware_ch11_low_power" folder and execude the "compile.bat" file it will now build the firmware and will try to flash it via the "zbs_flasher" you may want to put your correct COM port into the "compile.bat" file. It will use the included SDCC to build the firmware.
+(to build the other custom firmwares copy SDCC into it)
+
+### The now created "main.bin" is your own compiled version which can be flashed.
+
+
+# Compiling on Linux
+### This is a step by step guide on how to build the firmware for Solum SEM9110 alias ZBS243 Tags under Linux, that is talked about in [Dmitrys blog](http://dmitry.gr/?r=05.Projects&proj=29.%20eInk%20Price%20Tags).
+
+
+## Download
 Use an Arch Linux or set up a docker container with the archlinux image to build the firmware.
 Other Distros can cause problems, e.g. the firmware does not find the MAC address.
 
@@ -50,7 +69,7 @@ Unzip the files with the following commands:
 >unzip einkTags_0001.zip 
 >unzip einkTags_0002_8051.zip 
 
-# Preparing
+## Preparing
 After unpacking `einkTags_0002_8051.zip`, change the "#include" of the "proto.h" in the files **comms.c** and **main.c**.
 
 For example:
@@ -70,16 +89,21 @@ Install the "binutils" package with the following command, so that you will be a
 Install the "sdcc" package with the following command, so that you will be able to compile the code:
 >pacman -Syy sdcc
 
-# Build
+## Build
 Go into the **/firmware** folder of the unzipped `einkTags_0002_8051.zip` folder and enter the following commands to build your **main.bin**, which can be used to flash it to your Solum SEM9110 alias ZBS243 Tag:
 
 >make clean
 >make BUILD=zbs29v026 CPU=8051 SOC=zbs243
 
-# Flashing
+## Flashing
 Now you are able to flash the **main.bin** for example with the [ZBS_Flasher by atc1441](https://github.com/atc1441/ZBS_Flasher)
 
 > **_NOTE:_**  Before flashing, please BACKUP THE INFOPAGE!
 
 The infopage-binary contains calibration data.
 Starting from byte 0x10 of the infopage-binary, 8 bytes of a mac address can be set.
+
+# Credits:
+- https://twitter.com/atc1441
+- https://twitter.com/dmitrygr
+- Many more !
