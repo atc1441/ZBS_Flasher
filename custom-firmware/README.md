@@ -60,13 +60,15 @@ Other Distros can cause problems, e.g. the firmware does not find the MAC addres
 Download the files with the following commands or get it from [dmitry.gr](http://dmitry.gr/?r=05.Projects&proj=29.%20eInk%20Price%20Tags):
 
 >curl -LO http://dmitry.gr/images/einkTags_0001.zip
+>
 >curl -LO http://dmitry.gr/images/einkTags_0002_8051.zip
 
 Install the "unzip" package with the following command, so that you will be able to unzip the downloaded files:
 >pacman -Syy unzip
 
 Unzip the files with the following commands:
->unzip einkTags_0001.zip 
+>unzip einkTags_0001.zip
+>
 >unzip einkTags_0002_8051.zip 
 
 ## Preparing
@@ -86,6 +88,12 @@ Comment out the line `#include "datamatrix.h"` in the **drawing.c**. _Yes, reall
 Install the "binutils" package with the following command, so that you will be able to use the `make` command for the **Makefile**:
 >pacman -Syy binutils
 
+Sometimes the following commands are needed:
+
+>pacman-key --init
+>
+>pacman -Syy base-devel
+
 Install the "sdcc" package with the following command, so that you will be able to compile the code:
 >pacman -Syy sdcc
 
@@ -93,7 +101,18 @@ Install the "sdcc" package with the following command, so that you will be able 
 Go into the **/firmware** folder of the unzipped `einkTags_0002_8051.zip` folder and enter the following commands to build your **main.bin**, which can be used to flash it to your Solum SEM9110 alias ZBS243 Tag:
 
 >make clean
+>
 >make BUILD=zbs29v026 CPU=8051 SOC=zbs243
+
+For the CH11 Low Power Version 2.9" use:
+
+>make clean
+>
+>make BUILD=zbs29v033 CPU=8051 SOC=zbs243
+
+For the 1.54" Version:
+
+>make BUILD=zbs154v033 CPU=8051 SOC=zbs243
 
 ## Flashing
 Now you are able to flash the **main.bin** for example with the [ZBS_Flasher by atc1441](https://github.com/atc1441/ZBS_Flasher)
