@@ -122,7 +122,6 @@ void ZBS_interface::send_byte(uint8_t data)
             spi_ready = 1;
             spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
         }
-        spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
         spi->beginTransaction(spiSettings);
         spi->transfer(data);
         spi->endTransaction();
