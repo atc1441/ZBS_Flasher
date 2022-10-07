@@ -1,7 +1,10 @@
 
 
+# CC2531 Zigbee station infos are here:
+[CC2531_station](../CC2531_station/)
 
-# Precompiled firmware
+
+# Precompiled custom firmware
 ## For a simple starting point and direct testing of the labels use this precompiled firmwares for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
 
 V1.5:
