@@ -404,13 +404,18 @@ void handle_uart_cmd(uint8_t cmd, uint8_t *cmd_buff, uint8_t len) {
                 temp[c] = zbs.read_flash(0x08 + c);
             }
             const uint8_t val29[8] = {0x7d, 0x22, 0xff, 0x02, 0xa4, 0x58, 0xf0, 0x90};
+			const uint8_t val29_1[8] = {0x7d, 0x22, 0xff, 0x02, 0xaa, 0xb3, 0xf0, 0x90};
             const uint8_t val154[8] = {0xa1, 0x23, 0x22, 0x02, 0xa4, 0xc3, 0xe4, 0xf0};
             const uint8_t val42[8] = {0xDF, 0x22, 0x22, 0x02, 0xAD, 0x35, 0xAE, 0x04};
             if (memcmp(temp, val29, 8) == 0) {
                 // 2.9" 033
                 temp_buff[6] = 0x3B;
                 temp_buff[7] = 0x10;
-            } else if (memcmp(temp, val154, 8) == 0) {
+            } else if (memcmp(temp, val29_1, 8) == 0) {
+				// 2.9" 033 as well
+				temp_buff[6] = 0x3B;
+				temp_buff[7] = 0x10;
+			} else if (memcmp(temp, val154, 8) == 0) {
                 // 1.54" 033
                 temp_buff[6] = 0x34;
                 temp_buff[7] = 0x10;

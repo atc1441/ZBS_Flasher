@@ -1,10 +1,11 @@
 #!/usr/bin/python
+# -*- coding: ascii -*-
 ###    Autor: Aaron Christophel ATCnetz.de    ###
-# arg1 = COMPORT  arg2 = read(I) or write(I) arg3 = filename to read or write
 
 import sys
 from sys import exit
 import time
+import os
 import serial.tools.list_ports
 
 CMD_GET_VERSION = 1
@@ -23,25 +24,46 @@ CMD_ERASE_FLASH = 26
 CMD_ERASE_INFOBLOCK = 27
 CMD_SAVE_MAC_FROM_FW = 40
 
-if((len(sys.argv)==3) and (sys.argv[2].lower() == "mac".lower())):
-    usedCom = sys.argv[1]  # "COM5"
-    read_or_write = sys.argv[2]
+def print_arg_manual():
+    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) ")
+    print("Example: COM1 read file.bin slow_spi 115200 <- will read flash to file.bin with slow SPI and 115200 baud")
+    print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 115200 baud")
+    print("Example: COM1 MAC <- will write the original MAC into the infopage")
+    print("Example: COM1 MAC 1234567890ABCDEF <- will write this 16 byte MAC into the infopage")
+    print("Not the right arguments but here are the... please wait...")
+    ports_list = "possible UART ports: "
+    for port in serial.tools.list_ports.comports():
+        ports_list += port.device + " "
+    print(ports_list)
+    exit()
+
+custom_mac = "ffffffffffffffff"
+file = ""
+usedCom = sys.argv[1]  # "COM5"
+read_or_write = sys.argv[2]
+usedBaud = 115200
+mac_folder = "mac_backups/"
+
+if(sys.argv[2].lower() == "mac".lower()):
+    if(len(sys.argv)==3):
+        print("going to flash original MAC")
+    elif(len(sys.argv)==4):
+        custom_mac = sys.argv[3].lower()
+        if(len(custom_mac) != 16):
+            print("Mac not 16 bytes long")
+            print_arg_manual()
+        if(custom_mac.lower() == "ffffffffffffffff".lower()):
+            print("Mac should not be ff's only")
+            print_arg_manual()
+        file = mac_folder + custom_mac + ".bin"   
+        print("going to flash custom MAC: " + custom_mac)    
+    else:
+        print_arg_manual()
 else:
     if (len(sys.argv) < 4):
-        print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) ")
-        print("Example: COM1 read file.bin slow_spi 115200 <- will read flash to file.bin with slow SPI and 115200 baud")
-        print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 115200 baud")
-        print("Not the right arguments but here are the... please wait...")
-        ports_list = "possible UART ports: "
-        for port in serial.tools.list_ports.comports():
-            ports_list += port.device + " "
-        print(ports_list)
-        exit()
-    usedCom = sys.argv[1]  # "COM5"
-    read_or_write = sys.argv[2]
+        print_arg_manual()
     file = sys.argv[3]
-    
-usedBaud = 115200
+ 
 
 spi_speed = 0
 if len(sys.argv) >= 5:
@@ -240,30 +262,11 @@ def zbs_write_flash(addr, len, data):
             return [1]
         retry -= 1
     return [1]
+    
+################################
 
-
-uart_flush()
-
-zbs_version_answer = zbs_read_version()
-if zbs_version_answer[0] == 0 and len(zbs_version_answer) == 6:
-    print("ZBS Flasher version: " + str(zbs_version_answer[2]<<24|zbs_version_answer[3]<<16|zbs_version_answer[4]<<8|zbs_version_answer[5]))
-else:
-    print("Failed to read ZBS Flasher version")
-
-if zbs_init()[0] != 0:
-    print("Some Error in init")
-    exit()
-
-if (read_or_write.lower() == 'mac'.lower()):
-    send_cmd(CMD_SAVE_MAC_FROM_FW, bytearray([]))
-    answer_array = uart_receive_handler()
-    if answer_array[2] == 1:
-        print("Saved MAC from stock FW to infoblock, ready to flash custom firmware")
-        exit()
-    print("Error saving mac from stock FW to infoblock")
-    exit()
-
-if(read_or_write.lower() == 'read'.lower()):
+def cmd_read():
+    global file
     if zbs_select_flash_page(0)[0] != 0:
         print("error selecting flash page")
         exit()
@@ -297,7 +300,8 @@ if(read_or_write.lower() == 'read'.lower()):
     print("Saving file done, it took " +
           str(int((millis()-reading_start_time)/1000)) + " seconds")
 
-if(read_or_write.lower() == 'readI'.lower()):
+def cmd_readI():
+    global file
     if zbs_select_flash_page(1)[0] != 0:
         print("error selecting infopage page")
         exit()
@@ -331,8 +335,8 @@ if(read_or_write.lower() == 'readI'.lower()):
     print("Saving file done, it took " +
           str(int((millis()-reading_start_time)/1000)) + " seconds")
 
-
-elif(read_or_write.lower() == 'write'.lower()):
+def cmd_write():
+    global file
     print("Erasing flash now")
     if zbs_select_flash_page(0)[0] != 0:
         print("error selecting flash page")
@@ -376,8 +380,8 @@ elif(read_or_write.lower() == 'write'.lower()):
     print("Writing done, it took " + str(int((millis()-write_start_time)/1000)) + " seconds")
     print("Verfiy done and OK")
 
-
-elif(read_or_write.lower() == 'writeI'.lower()):
+def cmd_writeI():
+    global file
     print("Erasing infopage now")
     if zbs_select_flash_page(1)[0] != 0:
         print("error selecting infopage page")
@@ -420,6 +424,50 @@ elif(read_or_write.lower() == 'writeI'.lower()):
     print("")
     print("Writing done, it took " + str(int((millis()-write_start_time)/1000)) + " seconds")
     print("Verfiy done and OK")
+
+uart_flush()
+
+zbs_version_answer = zbs_read_version()
+if zbs_version_answer[0] == 0 and len(zbs_version_answer) == 6:
+    print("ZBS Flasher version: " + str(zbs_version_answer[2]<<24|zbs_version_answer[3]<<16|zbs_version_answer[4]<<8|zbs_version_answer[5]))
+else:
+    print("Failed to read ZBS Flasher version")
+
+if zbs_init()[0] != 0:
+    print("Some Error in init")
+    exit()
+
+if (read_or_write.lower() == 'mac'.lower()):
+    if(custom_mac.lower() == "ffffffffffffffff".lower()):
+        send_cmd(CMD_SAVE_MAC_FROM_FW, bytearray([]))
+        answer_array = uart_receive_handler()
+        if answer_array[2] == 1:
+            print("Saved MAC from stock FW to infoblock, ready to flash custom firmware")
+            exit()
+        print("Error saving mac from stock FW to infoblock")
+        exit()
+    else:
+        if not(os.path.exists(mac_folder)):
+            os.mkdir(mac_folder)
+        cmd_readI()
+        file = mac_folder + custom_mac + ".bin" # needs to be set again 
+        fh = open(file, "r+b")
+        fh.seek(0x10)
+        fh.write(bytes.fromhex(custom_mac)[::-1])
+        fh.close()
+        cmd_writeI()
+
+if(read_or_write.lower() == 'read'.lower()):
+    cmd_read()
+
+elif(read_or_write.lower() == 'readI'.lower()):
+    cmd_readI()
+
+elif(read_or_write.lower() == 'write'.lower()):
+    cmd_write()
+
+elif(read_or_write.lower() == 'writeI'.lower()):
+    cmd_writeI()
 
 if zbs_reset()[0] == 0:
     print("ZBS Reset")
