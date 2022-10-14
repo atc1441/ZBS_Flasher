@@ -337,7 +337,18 @@ static uint32_t uiNotPaired(void)
 					pr("Erz UPD\n");
 					eepromErase(EEPROM_UPDATA_AREA_START, EEPROM_UPDATE_AREA_LEN / EEPROM_ERZ_SECTOR_SZ);
 
-					// drawFullscreenMsg(signalIcon);
+					settingsWrite(&mSettings);
+					struct EepromContentsInfo __xdata eci;
+					prvEepromIndex(&eci);
+					if (eci.numValidImages)
+					{
+						drawImageAtAddress(EEPROM_IMG_START + (mathPrvMul32x8(EEPROM_IMG_EACH >> 8, eci.latestImgIdx) << 8));
+					}
+					else
+					{
+						drawFullscreenMsg(signalIcon);
+					}
+					wdtDeviceReset();
 
 					return 1000; // wake up in a second to check in
 				}
