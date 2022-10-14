@@ -25,6 +25,7 @@ V1.8:
 [demo_firmware_2.9_33_V1.8.0.0.bin](demo_firmware_2.9_33_V1.8.0.0.bin)
 
 V1.9:
+- On power up settings will be erased and the display refreshes to default
 - Better connection status showing on display
 
 [demo_firmware_2.9_33_V1.9.0.0.bin](demo_firmware_2.9_33_V1.9.0.0.bin)

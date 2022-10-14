@@ -920,6 +920,7 @@ static uint32_t uiPaired(void)
 
 void main(void)
 {
+	uint8_t reset_reason = RESET;
 	uint32_t __xdata sleepDuration;
 	uint32_t eeSize;
 	uint16_t nSlots;
@@ -928,7 +929,7 @@ void main(void)
 	timerInit();
 	boardInit();
 
-	pr("booted at 0x%04x\n", (uintptr_near_t)&main);
+	pr("booted at 0x%04x Reset reason: %02X\n", (uintptr_near_t)&main, reset_reason);
 
 	if (!eepromInit())
 	{
@@ -1010,6 +1011,22 @@ void main(void)
 	}
 	else
 	{
+
+		if ((reset_reason & 1) == 0)
+		{
+			pr("Erz IMAGES\n");
+			eepromErase(EEPROM_IMG_START, mathPrvMul32x8(EEPROM_IMG_EACH / EEPROM_ERZ_SECTOR_SZ, mNumImgSlots));
+
+			pr("Erz UPD\n");
+			eepromErase(EEPROM_UPDATA_AREA_START, EEPROM_UPDATE_AREA_LEN / EEPROM_ERZ_SECTOR_SZ);
+
+			pr("Erz SETTINGS\n");
+			eepromErase(EEPROM_SETTINGS_AREA_START, EEPROM_SETTINGS_AREA_LEN / EEPROM_ERZ_SECTOR_SZ);
+			
+			drawFullscreenMsg((const __xdata char *)"BOOTING");
+			
+			wdtDeviceReset();
+		}
 
 		settingsRead(&mSettings);
 
