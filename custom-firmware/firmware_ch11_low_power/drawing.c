@@ -230,7 +230,7 @@ static void drawPrvDecodeImageOnce(void)
 #endif
 
 		// get a row
-		if (offline && (er >= SCREEN_HEIGHT - 5))
+		if (offline && (er >= SCREEN_HEIGHT - 2))
 		{
 			xMemSet(rowBuf, 0x00, SCREEN_WIDTH);
 		}

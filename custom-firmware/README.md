@@ -19,7 +19,6 @@ V1.7:
 [demo_firmware_2.9_33_V1.7.0.0.bin](demo_firmware_2.9_33_V1.7.0.0.bin)
 
 V1.8:
-- On Error it will show it on the display before going into an endless loop
 - After a new Pairing it will show the last valid image again instead of erasing everything
 - HW_Upair option via P1.0 Pin added
 

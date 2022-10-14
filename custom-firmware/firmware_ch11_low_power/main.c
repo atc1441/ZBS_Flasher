@@ -23,9 +23,9 @@
 #include "cpu.h"
 
 //#define PICTURE_FRAME_FLIP_EVERY_N_CHECKINS		24		//undefine to disable picture frame mode
-#define HARDWARE_UNPAIR									  //undefine to disable hardware unpair
+#define HARDWARE_UNPAIR // undefine to disable hardware unpair
 
-static const uint64_t __code VERSIONMARKER mVersionRom = 0x0000011100000000ull;
+static const uint64_t __code VERSIONMARKER mVersionRom = 0x0000011200000000ull;
 
 static uint64_t __xdata mVersion;
 static uint8_t __xdata mRxBuf[COMMS_MAX_PACKET_SZ];
@@ -183,7 +183,7 @@ static void uiPrvDrawNthValidImage(uint8_t n)
 			{
 
 				mSettings.lastShownImgSlotIdx = slotId;
-				//drawImageAtAddress(addr);
+				// drawImageAtAddress(addr);
 				return;
 			}
 		}
@@ -331,8 +331,8 @@ static uint32_t uiNotPaired(void)
 
 					pr("Associated to master %m\n", (uintptr_near_t)&mSettings.masterMac);
 
-					//pr("Erz IMG\n");
-					//eepromErase(EEPROM_IMG_START, mathPrvMul32x8(EEPROM_IMG_EACH / EEPROM_ERZ_SECTOR_SZ, mNumImgSlots));
+					// pr("Erz IMG\n");
+					// eepromErase(EEPROM_IMG_START, mathPrvMul32x8(EEPROM_IMG_EACH / EEPROM_ERZ_SECTOR_SZ, mNumImgSlots));
 
 					pr("Erz UPD\n");
 					eepromErase(EEPROM_UPDATA_AREA_START, EEPROM_UPDATE_AREA_LEN / EEPROM_ERZ_SECTOR_SZ);
@@ -884,7 +884,7 @@ static uint32_t uiPaired(void)
 #ifdef PICTURE_FRAME_FLIP_EVERY_N_CHECKINS
 		uiPrvPictureFrameFlip(&eci);
 #else
-		//uiPrvDrawImageAtSlotIndex(eci.latestImgIdx);
+		// uiPrvDrawImageAtSlotIndex(eci.latestImgIdx);
 #endif
 	}
 
@@ -978,8 +978,11 @@ void main(void)
 	if (0)
 	{
 
-		drawFullscreenMsg((const __xdata char *)"ASSOCIATE READY");
-		// screenTest();
+		settingsRead(&mSettings);
+		mSettings.helperInit = 0;
+		mSettings.isPaired = 0;
+		settingsWrite(&mSettings);
+		drawFullscreenMsg((const __xdata char *)"TESTING");
 		eepromDeepPowerDown();
 		screenShutdown();
 		powerPortsDownForSleep();
@@ -998,19 +1001,20 @@ void main(void)
 
 		settingsRead(&mSettings);
 
-		#ifdef HARDWARE_UNPAIR
+#ifdef HARDWARE_UNPAIR
 		// check if P1.0 is driven low externally; if so, remove pairing info
-		P1DIR |= (1<<0); // P1.0 = input;
-		P1PULL|= (1<<0); // P1.0 = pullup;
+		P1DIR |= (1 << 0);	// P1.0 = input;
+		P1PULL |= (1 << 0); // P1.0 = pullup;
 		timerDelay(TIMER_TICKS_PER_SECOND / 1000);
-		if(!(P1&0x01)){
+		if (!(P1 & 0x01))
+		{
 			pr("Now deleting pairing info...\n");
+			mSettings.helperInit = 0;
 			mSettings.isPaired = 0;
 			settingsWrite(&mSettings);
 		}
-		P1PULL&=~(1<<0);
-		#endif
-
+		P1PULL &= ~(1 << 0);
+#endif
 
 		radioRxFilterCfg(mSelfMac, 0x10000, PROTO_PAN_ID);
 
@@ -1060,7 +1064,6 @@ void main(void)
 		screenShutdown();
 
 		powerPortsDownForSleep();
-
 
 		sleepForMsec(sleepDuration);
 
