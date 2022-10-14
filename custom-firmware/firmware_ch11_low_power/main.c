@@ -25,7 +25,7 @@
 //#define PICTURE_FRAME_FLIP_EVERY_N_CHECKINS		24		//undefine to disable picture frame mode
 #define HARDWARE_UNPAIR // undefine to disable hardware unpair
 
-static const uint64_t __code VERSIONMARKER mVersionRom = 0x0000011200000000ull;
+static const uint64_t __code VERSIONMARKER mVersionRom = 0x0000011300000000ull;
 
 static uint64_t __xdata mVersion;
 static uint8_t __xdata mRxBuf[COMMS_MAX_PACKET_SZ];
@@ -858,6 +858,7 @@ static uint32_t uiPaired(void)
 		{
 			pr("Disassoc as %u = %u\n", mSettings.numFailedCheckins, mSettings.failedCheckinsTillDissoc);
 			mSettings.isPaired = 0;
+			mSettings.helperInit = 0;
 
 			return 1000; // wake up in a second to try to pair
 		}
@@ -1041,7 +1042,7 @@ void main(void)
 
 			static const uint32_t __xdata presharedKey[] = PROTO_PRESHARED_KEY;
 
-			radioSetTxPower(10); // rather low
+			radioSetTxPower(10); // rather high
 
 			xMemCopyShort(mSettings.encrKey, presharedKey, sizeof(mSettings.encrKey));
 
