@@ -36,7 +36,10 @@ def print_arg_manual():
         ports_list += port.device + " "
     print(ports_list)
     exit()
-
+    
+if (len(sys.argv) == 1):
+    print_arg_manual()
+        
 custom_mac = "ffffffffffffffff"
 file = ""
 usedCom = sys.argv[1]  # "COM5"
