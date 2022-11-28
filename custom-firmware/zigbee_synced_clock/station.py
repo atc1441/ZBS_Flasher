@@ -13,7 +13,7 @@ def print(*args):
         msg += str(arg) + " "
     logger.warning(msg)
 
-PORT = "COM38"
+PORT = "COM13"
 EXTENDED_ADDRESS = [0xAB, 0xFF, 0xFF, 0xFF, 0x34, 0x56, 0x78, 0xFF]
 PANID = [ 0x43, 0x34 ]
 CHANNEL = 11
@@ -37,7 +37,7 @@ def process_pkt(pkt):
     src_mac = bytes(pkt['src_add']).hex().upper()
 
     if pkt['data'][0] == 0xC8 and pkt['data'][1] == 0xBC:
-        time_now = int(time.time())+ 60 * 60 * 2;
+        time_now = int(time.time())+ 60 * 60 * 1;
         out_data = [0xC9, 0xCA,(time_now>>24)&0xff,(time_now>>16)&0xff,(time_now>>8)&0xff,time_now&0xff]
         timaccop.mac_data_req(pkt['src_add'], PANID, 12, getDSN(), out_data,1)
         print("Time request from " + src_mac + " send time: " + str(time_now))
