@@ -63,14 +63,14 @@ It is written for the ESP32 but should run basically on any SOC with ~8 GPIOS an
 
 
 # Pins:
-ZBS243 Pin                       |Pin name                       |Name                       |ESP32 Pin                       |Arduino Nano Pin
-:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
-14 | P0_0 | SPI_Clk | 18 | 13
-15 | P0_1 | SPI_MoSi |  5 | 11
-16 | P0_2 | SPI_MiSo |  17 | 12
-17 | P0_3 | SPI_SS |  23 | 10
-22 | RST | RESET |  19 | 7
-ALL VCC | VCC | ZBS243 Power | 16 !!!* | 14 through 19
+ZBS243 Pin                       |Pin name                       |Name                       |ESP32 Pin                       |ESP82622 Pin                     |Arduino Nano Pin
+:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+14 | P0_0 | SPI_Clk | 18 | 14 | 13
+15 | P0_1 | SPI_MoSi |  5 | 13 | 11
+16 | P0_2 | SPI_MiSo |  17 | 12 | 12
+17 | P0_3 | SPI_SS |  23 | 15 | 10
+22 | RST | RESET |  19 | 0 | 7
+ALL VCC | VCC | ZBS243 Power | 16 !!!* | 4 !!!* | 14 through 19
 
 *  do not connect VCC directly to a GPIO only trough some kind of Mosfet or switch!
 
