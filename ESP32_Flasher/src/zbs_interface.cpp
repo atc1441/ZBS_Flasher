@@ -28,7 +28,11 @@ uint8_t ZBS_interface::begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO
     digitalWrite(_MOSI_PIN, HIGH);
     if (!_soft_spi)
     {
+#ifdef ESP32
         spi = new SPIClass(VSPI);
+#else
+        spi = new SPIClass();
+#endif
         spiSettings = SPISettings(spi_speed, MSBFIRST, SPI_MODE0);
         spi_ready = 0;
     }
@@ -120,7 +124,12 @@ void ZBS_interface::send_byte(uint8_t data)
         if (!spi_ready)
         {
             spi_ready = 1;
+#ifdef ESP32
             spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
+#else
+            spi->pins(_CLK_PIN, _MISO_PIN, _MOSI_PIN,_SS_PIN);
+            spi->begin();
+#endif
         }
         spi->beginTransaction(spiSettings);
         spi->transfer(data);
@@ -153,7 +162,12 @@ uint8_t ZBS_interface::read_byte()
         if (!spi_ready)
         {
             spi_ready = 1;
+#ifdef ESP32
             spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
+#else
+            spi->pins(_CLK_PIN, _MISO_PIN, _MOSI_PIN,_SS_PIN);
+            spi->begin();
+#endif
         }
         spi->beginTransaction(spiSettings);
         data = spi->transfer(0xff);
