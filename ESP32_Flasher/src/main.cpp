@@ -6,16 +6,34 @@
 #include "zbs_interface.h"
 #include "main.h"
 
-#define LED 22
 
-#define ZBS_SS 23
-#define ZBS_CLK 18
-#define ZBS_MoSi 5
-#define ZBS_MiSo 17
-#define ZBS_Reset 19
-#define ZBS_POWER 16 //  do not connect directly to a GPIO only trough some kind of Mosfet or switch!
+#ifdef ESP32
 
-#define ZBS_RXD 4 // Maybe later used to read UART data from the firmware running on the ZBS, not needed at all
+  #define LED 22
+
+  #define ZBS_SS 23
+  #define ZBS_CLK 18
+  #define ZBS_MoSi 5
+  #define ZBS_MiSo 17
+  #define ZBS_Reset 19
+  #define ZBS_POWER 16 //  do not connect directly to a GPIO only trough some kind of Mosfet or switch!
+
+  #define ZBS_RXD 4 // Maybe later used to read UART data from the firmware running on the ZBS, not needed at all
+
+#else
+  // defines for ESP8266
+  #define LED -1 
+
+  #define ZBS_SS 15 // D8
+  #define ZBS_CLK 14 // D5
+  #define ZBS_MoSi 13 // D7
+  #define ZBS_MiSo 12 // D6
+  #define ZBS_Reset 0 // D3
+  #define ZBS_POWER 4 // D2 //  do not connect directly to a GPIO only trough some kind of Mosfet or switch!
+
+  #define ZBS_RXD -1 // Maybe later used to read UART data from the firmware running on the ZBS, not needed at all
+
+#endif
 
 uint32_t FLASHER_VERSION = 0x00000020;
 
