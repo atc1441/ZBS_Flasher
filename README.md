@@ -23,9 +23,13 @@ ZBS243 Pinout:
 
 <img width="600" alt="ZBS243 Pinout" src="pictures/zbs243_Pinout.jpg">
 
-2.9" amd 1.54" SOLUM Electronic Shelf Label flashing Pinout:
+2.9" amd 1.54" Electronic Shelf Label flashing Pinout:
 
-<img width="600" alt="1.54 and 2.9 Pinout" src="pictures/290_154_flash_pinout.jpg">
+<a href="pictures/290_154_flash_pinout.jpg"><img width="600" alt="1.54 and 2.9 Pinout" src="pictures/290_154_flash_pinout.jpg"></a>
+
+4.2" Black Electronic Shelf Label flashing Pinout:
+
+<a href="pictures/420_flash_pinout.jpg"><img width="300" alt="4.2 Pinout" src="pictures/420_flash_pinout.jpg"></a>
 
 The debug interface is an SPI like connection and the debug mode is entered via toggling the CLK signal while a reset is done.
 

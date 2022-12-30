@@ -32,6 +32,7 @@
 #define ZBS_POWER 4 // D2 //  do not connect directly to a GPIO only trough some kind of Mosfet or switch!
 
 #define ZBS_RXD -1 // Maybe later used to read UART data from the firmware running on the ZBS, not needed at all
+#define ZBS_TXD -1
 
 #endif
 
@@ -386,6 +387,7 @@ void handle_uart_cmd(uint8_t cmd, uint8_t *cmd_buff, uint8_t len)
     break;
   }
   case CMD_PASS_THROUGH:
+#ifdef ESP32
     temp_buff[0] = 1;
     send_uart_answer(cmd, temp_buff, 1);
     Serial1.begin(115200, SERIAL_8N1, ZBS_RXD, ZBS_TXD);
@@ -399,6 +401,10 @@ void handle_uart_cmd(uint8_t cmd, uint8_t *cmd_buff, uint8_t len)
     digitalWrite(ZBS_RXD, LOW);
     pinMode(ZBS_TXD, INPUT);
     digitalWrite(ZBS_TXD, LOW);
+#else// Only ESP32 Support the second Serial 
+    temp_buff[0] = 0;
+    send_uart_answer(cmd, temp_buff, 1);
+#endif
     break;
   }
 }
