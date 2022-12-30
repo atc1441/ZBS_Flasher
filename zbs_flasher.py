@@ -23,9 +23,10 @@ CMD_WRITE_SFR = 25
 CMD_ERASE_FLASH = 26
 CMD_ERASE_INFOBLOCK = 27
 CMD_SAVE_MAC_FROM_FW = 40
+CMD_PASS_THROUGH = 50
 
 def print_arg_manual():
-    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) ")
+    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) pass at the end for UART Pass Through mode")
     print("Example: COM1 read file.bin slow_spi 115200 <- will read flash to file.bin with slow SPI and 115200 baud")
     print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 115200 baud")
     print("Example: COM1 MAC <- will write the original MAC into the infopage")
@@ -69,10 +70,13 @@ else:
  
 
 spi_speed = 0
+after_work_pass_through = 1
 if len(sys.argv) >= 5:
     if sys.argv[4].lower() == "slow_spi".lower():
         print("Using slow SPI speed")
         spi_speed = 1
+    elif sys.argv[4].lower() == "pass".lower():
+        after_work_pass_through = 1
 
 if len(sys.argv) >= 6:
     usedBaud = int(sys.argv[5])
@@ -169,6 +173,17 @@ def zbs_read_version():
         retry -= 1
     return [1]
 
+
+def zbs_flasher_enter_pass_through():
+    retry = 3
+    while(retry):
+        send_cmd(CMD_PASS_THROUGH, bytearray([]))
+        answer_array = uart_receive_handler()
+        if answer_array[0] == 0:
+            return [0]
+        retry -= 1
+    return [1]
+    
 def zbs_init():
     retry = 3
     while(retry):
@@ -476,5 +491,19 @@ if zbs_reset()[0] == 0:
     print("ZBS Reset")
 else:
     print("error while Reseting")
+
+if after_work_pass_through == 1:
+    if zbs_flasher_enter_pass_through()[0] == 0:
+        print("Pass Through mode:")
+        while(1):
+            while(serialPort.inWaiting() > 0):
+                current_char = serialPort.read(1)
+                try:
+                    print(current_char.decode('utf-8'), end = '')
+                except:
+                    pass
+    else:
+        print("error entering Pass Through mode")
+      
 
 serialPort.close()
