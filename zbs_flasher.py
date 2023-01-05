@@ -70,7 +70,7 @@ else:
  
 
 spi_speed = 0
-after_work_pass_through = 1
+after_work_pass_through = 0
 if len(sys.argv) >= 5:
     if sys.argv[4].lower() == "slow_spi".lower():
         print("Using slow SPI speed")
