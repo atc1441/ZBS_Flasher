@@ -171,6 +171,9 @@ struct ChunkInfo {
 #define HW_TYPE_29_INCH_ZBS_025					(10)
 #define HW_TYPE_29_INCH_ZBS_025_FRAME_MODE		(11)
 
+#define HW_TYPE_29_INCH_ZBS_033_BW				(12)
+#define HW_TYPE_29_INCH_ZBS_033_BW_FRAME_MODE	(13)
+
 #define HW_TYPE_29_INCH_ZBS_ROM_VER_OFST		(0x008b)
 
 
