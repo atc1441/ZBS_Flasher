@@ -48,6 +48,7 @@ void setup() {
 #define CMD_TYPE_SLEEP 0x05
 #define CMD_TYPE_EPD_DATA 0x06
 #define CMD_TYPE_EPD_INIT_MID_DATA 0x07
+#define CMD_TYPE_EPD_INIT_MID_DATA_EMPTY 0x17
 #define CMD_TYPE_EPD_INIT_DATA 0x08
 #define CMD_TYPE_EPD_END_DATA 0x09
 
@@ -147,24 +148,29 @@ void send_image(uint16_t endpoint, uint8_t *img_buffer_black, uint8_t *img_buffe
       break;
     }
   }
-  cur_posi = 0;
-  cur_len = img_len;
 
-  while (1) {
-    cur_len = img_len - cur_posi;
+  if (img_buffer_red != NULL) {
+    cur_posi = 0;
+    cur_len = img_len;
 
-    if (cur_len > UART_CMD_SIZE)
-      cur_len = UART_CMD_SIZE;
+    while (1) {
+      cur_len = img_len - cur_posi;
 
-    send_data(endpoint, (cur_posi == 0) ? CMD_TYPE_EPD_INIT_MID_DATA : CMD_TYPE_EPD_DATA, cur_len, &img_buffer_red[cur_posi]);
+      if (cur_len > UART_CMD_SIZE)
+        cur_len = UART_CMD_SIZE;
 
-    delayMicroseconds(UART_DELAY_AFTER_CMD);
-    cur_posi += cur_len;
+      send_data(endpoint, (cur_posi == 0) ? CMD_TYPE_EPD_INIT_MID_DATA : CMD_TYPE_EPD_DATA, cur_len, &img_buffer_red[cur_posi]);
 
-    if (cur_posi >= img_len)
-    {
-      break;
+      delayMicroseconds(UART_DELAY_AFTER_CMD);
+      cur_posi += cur_len;
+
+      if (cur_posi >= img_len)
+      {
+        break;
+      }
     }
+  } else {
+    send_data(endpoint, CMD_TYPE_EPD_INIT_MID_DATA_EMPTY);
   }
   if (do_refresh)
     send_data(endpoint, partial ? CMD_TYPE_REFRESH_END_PARTIAL : CMD_TYPE_REFRESH_END);

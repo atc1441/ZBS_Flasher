@@ -8,7 +8,7 @@
 #include "printf.h"
 #include "eeprom.h"
 #include "screen.h"
-//#include "radio.h"
+// #include "radio.h"
 #include "sleep.h"
 #include "timer.h"
 #include "board.h"
@@ -46,7 +46,6 @@ __bit screen_refresh_started = 0;
 
 uint32_t start_time = 0;
 
-
 #define BROADCAST_NODE_ID 0xffff
 #define NODE_TX_ID 0xfffe
 
@@ -78,7 +77,6 @@ uint32_t start_time = 0;
 #define CMD_TYPE_ERASE_OTA_AREA 0x10
 #define CMD_TYPE_WRITE_EEPROM 0x11
 #define CMD_TYPE_DO_UPDATE 0x12
-
 
 #define CMD_TYPE_WA 0xFF
 
@@ -131,12 +129,12 @@ void handle_cmd(uint8_t cmd, uint8_t data_len, uint8_t *the_data)
 	case CMD_TYPE_REFRESH:
 		screen_refresh_started = 1;
 		screenTxStart();
-		for (uint32_t i = 0; i < 4736; i++)
+		for (uint32_t i = 0; i < 2888; i++)
 		{
 			screenByteTx(the_data[0]);
 		}
 		screenEndPass();
-		for (uint32_t i = 0; i < 4736; i++)
+		for (uint32_t i = 0; i < 2888; i++)
 		{
 			screenByteTx(the_data[1]);
 		}
@@ -247,7 +245,7 @@ void handle_cmd(uint8_t cmd, uint8_t data_len, uint8_t *the_data)
 	case CMD_TYPE_EPD_INIT_MID_DATA_EMPTY:
 	{
 		screenEndPass();
-		for (uint32_t i = 0; i < 4736; i++)
+		for (uint32_t i = 0; i < 2888; i++)
 		{
 			screenByteTx(0x00);
 		}
@@ -444,6 +442,52 @@ void main(void)
 		eeprom_available = 1;
 	}
 	irqsOn();
+
+	//*** DEBUG REFRESH
+	if (0)
+	{
+		P0FUNC |= 0b01000000; // Enable Uart TXD
+		pr("Starting demo refresh\r\n");
+		screen_refresh_started = 1;
+		screenTxStart();
+		for (uint32_t i = 0; i < 2888; i++)
+		{
+			screenByteTx(0xff);
+		}
+		screenEndPass();
+		for (uint32_t i = 0; i < 2888; i++)
+		{
+			screenByteTx(0x00);
+		}
+		screen_refresh_started = 0;
+		screenTxEnd(0); // 1 = partial
+		pr("NOW\r\n");
+		while (is_drawing())
+		{
+		}
+		pr("Done\r\n");
+		screen_refresh_started = 1;
+		pr("Starting partial refresh\r\n");
+		screenTxStart();
+		for (uint32_t i = 0; i < 2888; i++)
+		{
+			screenByteTx(0x12);
+		}
+		screenEndPass();
+		for (uint32_t i = 0; i < 2888; i++)
+		{
+			screenByteTx(0x00);
+		}
+		screen_refresh_started = 0;
+		screenTxEnd(1); // 1 = partial
+		pr("NOW\r\n");
+		while (is_drawing())
+		{
+		}
+		pr("Done\r\n");
+	}
+	//*** DEBUG REFRESH
+
 	while (is_drawing() || (timerGet() - start_time < (uint32_t)((uint64_t)TIMER_TICKS_PER_SECOND)))
 	{
 		if (new_cmd)
