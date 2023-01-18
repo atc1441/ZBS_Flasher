@@ -88,6 +88,8 @@ void ZBS_interface::enable_debug()
 
 void ZBS_interface::reset()
 {
+    if (!_soft_spi)
+        spi->end();
     pinMode(_SS_PIN, INPUT);
     pinMode(_CLK_PIN, INPUT);
     pinMode(_MOSI_PIN, INPUT);
@@ -127,7 +129,7 @@ void ZBS_interface::send_byte(uint8_t data)
 #ifdef ESP32
             spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
 #else
-            spi->pins(_CLK_PIN, _MISO_PIN, _MOSI_PIN,_SS_PIN);
+            spi->pins(_CLK_PIN, _MISO_PIN, _MOSI_PIN, _SS_PIN);
             spi->begin();
 #endif
         }
@@ -165,7 +167,7 @@ uint8_t ZBS_interface::read_byte()
 #ifdef ESP32
             spi->begin(_CLK_PIN, _MISO_PIN, _MOSI_PIN);
 #else
-            spi->pins(_CLK_PIN, _MISO_PIN, _MOSI_PIN,_SS_PIN);
+            spi->pins(_CLK_PIN, _MISO_PIN, _MOSI_PIN, _SS_PIN);
             spi->begin();
 #endif
         }
