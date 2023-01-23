@@ -4,10 +4,32 @@
 # create a folder named meme
 # insert your display id
 display_id = "0000000000000013"
+display_x = 640
+display_y = 384
+display_rotation = 90
+display_compression = 1
+
+# values for 2.9"
+#display_x = 296
+#display_y = 128
+#display_rotation = 0
+#display_compression = 0
+
+# values for 4.2"
+#display_x = 300
+#display_y = 400
+#display_rotation = 0
+#display_compression = 0
+
+# values for 7.4"
+#display_x = 640
+#display_y = 384
+#display_rotation = 90
+#display_compression = 1
 
 import requests
 from PIL import Image, ImageDraw, ImageFont
-import praw
+import prawFILL IN YOUR DATA
 import bmp2grays 
 import os
 import gzip
@@ -58,8 +80,8 @@ def do_memeing():
     print(image.size)
     
     
-    out_img = Image.new("RGB",(384,640), 0)
-    image.thumbnail((384,640))
+    out_img = Image.new("RGB",(display_y,display_x), 0)
+    image.thumbnail((display_y,display_x))
     img_w, img_h = image.size
     bg_w, bg_h = out_img.size
     offset = ((bg_w - img_w) // 2, (bg_h - img_h) // 2)
@@ -69,7 +91,7 @@ def do_memeing():
     font = ImageFont.truetype("arial.ttf", font_size)
     img_draw = ImageDraw.Draw(out_img)
     img_draw.text((0, 0), author, fill='Red', font=font)
-    out_img = out_img.rotate(90, expand=True)
+    out_img = out_img.rotate(display_rotation, expand=True)
     out_img.save(pre_dither)
     out_img.save(filename)
     
@@ -83,14 +105,15 @@ def do_memeing():
     file_conv = os.path.join("tmp/", display_id + "_" + str(imgVer) + ".bmp")
     bmp2grays.convertImage(1, "1bppR", filename, file_conv)
     
-    file = open(file_conv,"rb")
-    data = file.read()
-    file.close()
-    compressed_data = gzip.compress(data)
-    file = open(file_conv,"wb")
-    file.write(compressed_data)
-    file.close()
-    print("Size before compression: " + str(len(data)) + " compressed: " + str(len(compressed_data)))
+    if display_compression == 1:
+        file = open(file_conv,"rb")
+        data = file.read()
+        file.close()
+        compressed_data = gzip.compress(data)
+        file = open(file_conv,"wb")
+        file.write(compressed_data)
+        file.close()
+        print("Size before compression: " + str(len(data)) + " compressed: " + str(len(compressed_data)))
 
 
 
