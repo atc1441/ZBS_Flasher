@@ -1,0 +1,4 @@
+pyserial
+pycryptodomex
+pillow
+websockets

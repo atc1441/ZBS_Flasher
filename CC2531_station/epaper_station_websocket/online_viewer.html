@@ -1,0 +1,200 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Zigbee Station</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="data:,">
+  <style>
+    body {
+      background-color: #f2f2f2;
+      font-family: Arial, sans-serif;
+    }
+    
+    #inputDivCMD {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 20px;
+    }
+    
+    label {
+      font-size: 20px;
+      margin-right: 10px;
+    }
+    
+    input[type="text"] {
+      font-size: 18px;
+      padding: 10px;
+      width: 300px;
+      border: 2px solid #ccc;
+      border-radius: 4px;
+    }
+    
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    pre {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+      overflow-y: scroll;
+      height: 150px;
+    }
+    
+    #contentDiv {
+      font-size: 18px;
+    }
+    
+    .display {
+    background-color: lightgreen;
+    box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+      margin: 5px;
+	  padding: 10px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: top;
+      align-items: top;
+      font-size: 12px;
+      color: black;
+    font-weight: bold;
+	  font-family:'Lucida Console', monospace
+    }
+	
+  #container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  </style>
+</head>
+<body>
+<h1>E-Paper Station Online Viewer</h1>
+  <div id="inputDivCMD">
+    <label for="custm_cmd_in">CMD:</label>
+    <input type="text" id="custm_cmd_in" value="ATC">
+    <button onclick='send_data(document.getElementById("custm_cmd_in").value)'>Send cmd</button>
+  </div>
+  <pre>
+    <div id="contentDiv"></div>
+  </pre>
+  <div id="container"></div>
+  <script>
+    var gateway = `ws://localhost:8000/ws`;
+    var websocket;
+    var divs = [];
+
+    window.addEventListener('load', onLoad);
+    function initWebSocket() {
+      console.log('Trying to open a WebSocket connection...');
+      websocket = new WebSocket(gateway);
+      websocket.onopen = onOpen;
+      websocket.onclose = onClose;
+      websocket.onmessage = onMessage;
+    }
+
+    function onOpen(event) {
+      console.log('Connection opened');
+      document.getElementById('contentDiv').innerHTML += "Connection opened<br>";
+      send_data("ping");
+    }
+
+    function onClose(event) {
+      console.log('Connection closed');
+      document.getElementById('contentDiv').innerHTML += "Connection closed<br>";
+      setTimeout(initWebSocket, 2000);
+    }
+
+    function onMessage(event) {
+      document.getElementById('contentDiv').innerHTML = event.data + "<br>" + document.getElementById('contentDiv').innerHTML;
+      while((contentDiv.innerHTML.match(/<br>/g) || []).length > 20){
+        var logs_br_position = contentDiv.innerHTML.search("<br>");
+        contentDiv.innerHTML = contentDiv.innerHTML.substring(0, contentDiv.innerHTML.lastIndexOf("<br>"));
+      }
+		if(event.data.substring(16,18)=="F2")
+		{	
+			addOrUpdateDiv(event.data.substring(0,16), event.data);
+		}
+    }
+
+    function onLoad(event) {
+		initWebSocket();
+    }
+
+    function send_data(data) {
+		console.log(data)
+		websocket.send(data);
+	}
+	
+function addOrUpdateDiv(mac, data) {
+  var div = document.getElementById(mac);
+  if (div === null) {
+    createDiv(mac, data);
+  } else {
+    updateDiv(mac, data);
+  }
+}
+  function createDiv(mac, data) {
+    let div = document.createElement("div");
+    div.classList.add("display");
+    div.id = mac;
+    div.innerHTML = getContentText(data);
+    div.lastUpdated = Date.now();
+	container.appendChild(div);
+  }
+  
+	function updateDiv(mac, data) {
+		var divToUpdate = document.getElementById(mac);
+		divToUpdate.innerHTML = getContentText(data);
+		divToUpdate.style.backgroundColor = "blue";
+		divToUpdate.lastUpdated = Date.now();
+	}
+	
+	function getContentText(data)
+	{
+		var today = new Date();
+		var time = zeroPad(today.getHours(), 2) + ":" + zeroPad(today.getMinutes(), 2);
+		content = data.substring(0,16) + "<br>";
+		content += "Last seen: " + time + "<br>";
+		content += "SW Ver: " + data.substring(24,34) + "<br>";
+		content += "HwType: " + data.substring(36,38) + data.substring(34,36) + "<br>";
+		content += "Battery: " + parseInt(Number("0x" + data.substring(40,42) + data.substring(38,40)), 10) + "mV<br>";
+		content += "LQI: " + parseInt(Number("0x" + data.substring(42,44)), 10);
+		content += " RSSI: " + parseInt(Number("0x" + data.substring(44,46)), 10) + "<br>";
+		content += "Temperature: " + parseInt(Number("0x" + data.substring(46,48)), 10) + "<br>";
+		content += "<img onerror=\"this.onerror=null; this.src='no_img.jpg'\" style='height: 128px; object-fit: contain' src='input_img/" + data.substring(0,16) + ".png'>";
+		return content;
+	}
+
+  function updateDivColor(div) {
+    let elapsed = (Date.now() - div.lastUpdated) / 1000;
+    let ratio = Math.min(elapsed / 600, 1);
+    let r = Math.round(255 * ratio);
+    let g = Math.round(255 * (1 - ratio));
+    div.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
+  }
+
+  setInterval(function() {
+    let divs = document.getElementsByClassName("display");
+    for (let i = 0; i < divs.length; i++) {
+      let div = divs[i];
+      updateDivColor(div);
+    }
+  }, 500);
+  
+  function zeroPad(num, places) {
+  var zero = places - num.toString().length + 1;
+  return Array(+(zero > 0 && zero)).join("0") + num;
+}
+
+</script>
+</body>
+</html>
