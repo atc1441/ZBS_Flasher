@@ -59,25 +59,40 @@ class SynchronousWebsocketServer:
     
 clients = set()
 def connect_callback(websocket):
-    clients.add(websocket)
-    print('New client. Websocket ID = %s. We now have %d clients' % (id(websocket), len(clients)))
-    database.share(send, websocket)
+    try:
+        clients.add(websocket)
+        print('New client. Websocket ID = %s. We now have %d clients' % (id(websocket), len(clients)))
+        database.share(send, websocket)
+    except Exception as e:
+        print("Websocket Err")
 
 def diconnect_callback(websocket):
-    clients.remove(websocket)
-    print('Client diconnected. Websocket ID = %s. %d clients remaining' % (id(websocket), len(clients)))
+    try:
+        clients.remove(websocket)
+        print('Client diconnected. Websocket ID = %s. %d clients remaining' % (id(websocket), len(clients)))
+    except Exception as e:
+        print("Websocket Err")
 
 def broadcast(message):      
-    for websocketClient in clients:
-        server.txqueue.put((websocketClient, message))
+    try:
+        for websocketClient in clients:
+            server.txqueue.put((websocketClient, message))
+    except Exception as e:
+        print("Websocket Err")
         
-def send(websocket, message):      
+def send(websocket, message):   
+    try:   
         server.txqueue.put((websocket, message))
+    except Exception as e:
+        print("Websocket Err")
         
 def init():
-    global server
-    server = SynchronousWebsocketServer(connect_callback=connect_callback, disconnect_callback=diconnect_callback)
-    server.start('localhost', 8000)
+    try:
+        global server
+        server = SynchronousWebsocketServer(connect_callback=connect_callback, disconnect_callback=diconnect_callback)
+        server.start('localhost', 8000)
+    except Exception as e:
+        print("Websocket Err")
     
 def run():
     try:
@@ -88,4 +103,4 @@ def run():
             server.txqueue.put((websocket, message))    # echo   
         time.sleep(0.005)
     except Exception as e:
-        print("Websocket Err: " + e)
+        print("Websocket Err")

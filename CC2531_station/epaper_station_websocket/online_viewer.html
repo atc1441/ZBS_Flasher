@@ -121,7 +121,7 @@
 		if(event.data.substring(16,18)=="F0")
 		{	
 			let last_time = parseInt(Number("0x" + event.data.substring(94,102)), 10) * 1000;
-			addOrUpdateDiv(event.data.substring(0,16), "000000000000000000000000000000000000000000000000000000000000", last_time);
+			addOrUpdateDiv(event.data.substring(0,16), event.data.substring(0,16) + "00000000000000000000000000000000000000000000", last_time);
 		}else if(event.data.substring(16,18)=="F2")
 		{	
 			let last_time = parseInt(Number("0x" + event.data.substring(60,68)), 10) * 1000;
