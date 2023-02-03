@@ -3,6 +3,7 @@ import websockets.server
 import queue
 import asyncio
 import time
+import database
 
 #Credit: https://stackoverflow.com/questions/68939894/implement-a-python-websocket-listener-without-async-asyncio
 class SynchronousWebsocketServer:
@@ -60,6 +61,7 @@ clients = set()
 def connect_callback(websocket):
     clients.add(websocket)
     print('New client. Websocket ID = %s. We now have %d clients' % (id(websocket), len(clients)))
+    database.share(send, websocket)
 
 def diconnect_callback(websocket):
     clients.remove(websocket)
@@ -67,15 +69,15 @@ def diconnect_callback(websocket):
 
 def broadcast(message):      
     for websocketClient in clients:
-        print("Sending: ")
         server.txqueue.put((websocketClient, message))
+        
+def send(websocket, message):      
+        server.txqueue.put((websocket, message))
         
 def init():
     global server
     server = SynchronousWebsocketServer(connect_callback=connect_callback, disconnect_callback=diconnect_callback)
-    print("Starting server")
     server.start('localhost', 8000)
-    print("Server started")
     
 def run():
     try:
@@ -85,5 +87,5 @@ def run():
             print("Received message from websocket ID=%s. Echoing %s " % (id(websocket), message))
             server.txqueue.put((websocket, message))    # echo   
         time.sleep(0.005)
-    except KeyboardInterrupt:
-        exit()
+    except Exception as e:
+        print("Websocket Err: " + e)

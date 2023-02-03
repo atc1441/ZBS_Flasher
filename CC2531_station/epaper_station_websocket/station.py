@@ -14,6 +14,7 @@ import queue
 import asyncio
 import time
 import websock
+import database
 
 masterkey = bytearray.fromhex("D306D9348E29E5E358BF2934812002C1")
 
@@ -408,17 +409,27 @@ def process_pkt(pkt):
         print("packet is NOT authentic")
         return
         
-    if len(pkt['src_add']) == 8:
-        websock.broadcast( "".join("{:02x}".format(num) for num in pkt['src_add']).upper() + plaintext.hex().upper())
     
     typ = plaintext[0]
 
     if typ == PKT_ASSOC_REQ:
         print("Got assoc request")
         process_assoc(pkt, plaintext[1:])
+        if len(pkt['src_add']) == 8:
+            mac_str = "".join("{:02x}".format(num) for num in pkt['src_add']).upper()
+            data_str = plaintext.hex().upper().upper()
+            time_str =  "{:08x}".format(int(time.time()))
+            websock.broadcast( mac_str + data_str + time_str)
+            database.addAssoc(mac_str, data_str + time_str)
     elif typ == PKT_CHECKIN:
         print("Got checkin request")
         process_checkin(pkt, plaintext[1:])
+        if len(pkt['src_add']) == 8:
+            mac_str = "".join("{:02x}".format(num) for num in pkt['src_add']).upper()
+            data_str = plaintext.hex().upper()
+            time_str =  "{:08x}".format(int(time.time())).upper()
+            websock.broadcast( mac_str + data_str + time_str)
+            database.addStatus(mac_str, data_str + time_str)
     elif typ == PKT_CHUNK_REQ:
         print("Got chunk request")
         process_download(pkt, plaintext[1:])
@@ -426,6 +437,8 @@ def process_pkt(pkt):
         print("Unknown request", typ)
 
 
+database.init("displays.txt","display_status.txt")
+print("Database started")
 websock.init()
 print("WebSocket started")
 timaccop.init(PORT, PANID, CHANNEL, EXTENDED_ADDRESS, process_pkt, websock.run)

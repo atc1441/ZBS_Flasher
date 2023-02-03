@@ -86,115 +86,136 @@
   <pre>
     <div id="contentDiv"></div>
   </pre>
+  <div id="counter"></div>
   <div id="container"></div>
   <script>
     var gateway = `ws://localhost:8000/ws`;
     var websocket;
     var divs = [];
+	var availableDisplays = 0;
 
     window.addEventListener('load', onLoad);
     function initWebSocket() {
-      console.log('Trying to open a WebSocket connection...');
-      websocket = new WebSocket(gateway);
-      websocket.onopen = onOpen;
-      websocket.onclose = onClose;
-      websocket.onmessage = onMessage;
+		console.log('Trying to open a WebSocket connection...');
+		addLog('Trying to open a WebSocket connection...');
+		websocket = new WebSocket(gateway);
+		websocket.onopen = onOpen;
+		websocket.onclose = onClose;
+		websocket.onmessage = onMessage;
     }
 
     function onOpen(event) {
-      console.log('Connection opened');
-      document.getElementById('contentDiv').innerHTML += "Connection opened<br>";
-      send_data("ping");
+		console.log('Connection opened');
+		addLog('Connection opened');
+		send_data("ping");
     }
 
     function onClose(event) {
-      console.log('Connection closed');
-      document.getElementById('contentDiv').innerHTML += "Connection closed<br>";
-      setTimeout(initWebSocket, 2000);
+		console.log('Connection closed');
+		addLog('Connection closed');
+		setTimeout(initWebSocket, 2000);
     }
 
     function onMessage(event) {
-      document.getElementById('contentDiv').innerHTML = event.data + "<br>" + document.getElementById('contentDiv').innerHTML;
-      while((contentDiv.innerHTML.match(/<br>/g) || []).length > 20){
-        var logs_br_position = contentDiv.innerHTML.search("<br>");
-        contentDiv.innerHTML = contentDiv.innerHTML.substring(0, contentDiv.innerHTML.lastIndexOf("<br>"));
-      }
-		if(event.data.substring(16,18)=="F2")
+		addLog("RX: " + event.data)
+		if(event.data.substring(16,18)=="F0")
 		{	
-			addOrUpdateDiv(event.data.substring(0,16), event.data);
+			let last_time = parseInt(Number("0x" + event.data.substring(94,102)), 10) * 1000;
+			addOrUpdateDiv(event.data.substring(0,16), "000000000000000000000000000000000000000000000000000000000000", last_time);
+		}else if(event.data.substring(16,18)=="F2")
+		{	
+			let last_time = parseInt(Number("0x" + event.data.substring(60,68)), 10) * 1000;
+			addOrUpdateDiv(event.data.substring(0,16), event.data, last_time);
 		}
     }
+	
+	function addLog(msg){
+		document.getElementById('contentDiv').innerHTML = msg + "<br>" + document.getElementById('contentDiv').innerHTML;
+		while((contentDiv.innerHTML.match(/<br>/g) || []).length > 150){
+			var logs_br_position = contentDiv.innerHTML.search("<br>");
+			contentDiv.innerHTML = contentDiv.innerHTML.substring(0, contentDiv.innerHTML.lastIndexOf("<br>"));
+		}
+	}
 
     function onLoad(event) {
 		initWebSocket();
+		setInterval(function() {
+			let divs = document.getElementsByClassName("display");
+			for (let i = 0; i < divs.length; i++) {
+				let div = divs[i];
+				updateDivColor(div);
+			}
+		}, 500);
     }
 
     function send_data(data) {
 		console.log(data)
+		addLog("TX: " + data)
 		websocket.send(data);
 	}
 	
-function addOrUpdateDiv(mac, data) {
-  var div = document.getElementById(mac);
-  if (div === null) {
-    createDiv(mac, data);
-  } else {
-    updateDiv(mac, data);
-  }
-}
-  function createDiv(mac, data) {
-    let div = document.createElement("div");
-    div.classList.add("display");
-    div.id = mac;
-    div.innerHTML = getContentText(data);
-    div.lastUpdated = Date.now();
-	container.appendChild(div);
-  }
+	function addOrUpdateDiv(mac, data, last_time) {
+		var div = document.getElementById(mac);
+		if (div === null) {
+			createDiv(mac, data, last_time);
+		} else {
+			updateDiv(mac, data, last_time);
+		}
+	}
+
+	function createDiv(mac, data, last_time) {
+		let div = document.createElement("div");
+		div.classList.add("display");
+		div.id = mac;
+		div.innerHTML = getContentText(data, last_time);
+		div.lastUpdated = last_time;
+		container.appendChild(div);
+		availableDisplays+=1;
+		document.getElementById("counter").innerHTML = "Displays: " + availableDisplays;
+	}
   
-	function updateDiv(mac, data) {
+	function updateDiv(mac, data, last_time) {
 		var divToUpdate = document.getElementById(mac);
-		divToUpdate.innerHTML = getContentText(data);
+		divToUpdate.innerHTML = getContentText(data, last_time);
 		divToUpdate.style.backgroundColor = "blue";
-		divToUpdate.lastUpdated = Date.now();
+		divToUpdate.lastUpdated = last_time;
 	}
 	
-	function getContentText(data)
+	function getContentText(data, last_time)
 	{
-		var today = new Date();
-		var time = zeroPad(today.getHours(), 2) + ":" + zeroPad(today.getMinutes(), 2);
 		content = data.substring(0,16) + "<br>";
-		content += "Last seen: " + time + "<br>";
+		content += "Seen: " + timeConverter(last_time) + "<br>";
 		content += "SW Ver: " + data.substring(24,34) + "<br>";
 		content += "HwType: " + data.substring(36,38) + data.substring(34,36) + "<br>";
 		content += "Battery: " + parseInt(Number("0x" + data.substring(40,42) + data.substring(38,40)), 10) + "mV<br>";
 		content += "LQI: " + parseInt(Number("0x" + data.substring(42,44)), 10);
 		content += " RSSI: " + parseInt(Number("0x" + data.substring(44,46)), 10) + "<br>";
 		content += "Temperature: " + parseInt(Number("0x" + data.substring(46,48)), 10) + "<br>";
-		content += "<img onerror=\"this.onerror=null; this.src='no_img.jpg'\" style='height: 128px; object-fit: contain' src='input_img/" + data.substring(0,16) + ".png'>";
+		content += "<img onerror=\"this.onerror=null; this.src='no_img.jpg'\" style='width: 128px; height: 128px; object-fit: contain' src='input_img/" + data.substring(0,16) + ".png'>";
 		return content;
 	}
 
-  function updateDivColor(div) {
-    let elapsed = (Date.now() - div.lastUpdated) / 1000;
-    let ratio = Math.min(elapsed / 600, 1);
-    let r = Math.round(255 * ratio);
-    let g = Math.round(255 * (1 - ratio));
-    div.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
-  }
-
-  setInterval(function() {
-    let divs = document.getElementsByClassName("display");
-    for (let i = 0; i < divs.length; i++) {
-      let div = divs[i];
-      updateDivColor(div);
-    }
-  }, 500);
+	function updateDivColor(div) {
+		let elapsed = (Date.now() - div.lastUpdated) / 1000;
+		let ratio = Math.min(elapsed / 600, 1);
+		let r = Math.round(255 * ratio);
+		let g = Math.round(255 * (1 - ratio));
+		div.style.backgroundColor = `rgb(${r}, ${g}, 0)`;
+	}
   
-  function zeroPad(num, places) {
-  var zero = places - num.toString().length + 1;
-  return Array(+(zero > 0 && zero)).join("0") + num;
-}
+	function zeroPad(num, places) {
+		var zero = places - num.toString().length + 1;
+		return Array(+(zero > 0 && zero)).join("0") + num;
+	}
 
+	function timeConverter(UNIX_timestamp){
+		var a = new Date(UNIX_timestamp);
+		var date = a.getDate();
+		var hour = a.getHours();
+		var min = a.getMinutes();
+		var time = zeroPad(date,2) + ". " + zeroPad(hour,2) + ':' + zeroPad(min,2);
+		return time;
+	}
 </script>
 </body>
 </html>
