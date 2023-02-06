@@ -24,6 +24,7 @@ PANID = [ int(panid.strip(), 16) for panid in os.environ.get("EPS_PANID", defaul
 CHANNEL = int(os.environ.get("EPS_CHANNEL", default="11"))
 IMAGE_DIR = os.environ.get("EPS_IMAGE_DIR", default="./input_img")
 IMAGE_WORKDIR = os.environ.get("EPS_IMAGE_WORKDIR", default="tmp/")
+DATABASE_DIR = os.environ.get("EPS_DATABASE_DIR", default="./")
 IMAGE_FORMAT = os.environ.get("EPS_IMAGE_FORMAT", default="1bppR")
 
 CHECKIN_DELAY = int(os.environ.get("EPS_CHECKIN_DELAY", default="300000")) # 900s
@@ -438,7 +439,7 @@ def process_pkt(pkt):
         print("Unknown request", typ)
 
 
-database.init("displays.txt","display_status.txt")
+database.init(f"{DATABASE_DIR}/displays.txt", f"{DATABASE_DIR}/display_status.txt")
 print("Database started")
 websock.init()
 print("WebSocket started")
