@@ -25,6 +25,7 @@ CHANNEL = int(os.environ.get("EPS_CHANNEL", default="11"))
 IMAGE_DIR = os.environ.get("EPS_IMAGE_DIR", default="./input_img")
 IMAGE_WORKDIR = os.environ.get("EPS_IMAGE_WORKDIR", default="tmp/")
 DATABASE_DIR = os.environ.get("EPS_DATABASE_DIR", default="./")
+IMAGE_FORMAT = os.environ.get("EPS_IMAGE_FORMAT", default="1bppR")
 
 CHECKIN_DELAY = int(os.environ.get("EPS_CHECKIN_DELAY", default="300000")) # 900s
 RETRY_DELAY = int(os.environ.get("EPS_RETRY_DELAY", default="1000")) # 1s
@@ -220,10 +221,10 @@ def prepare_image(client, compressionSupported):
 
     if not os.path.isfile(file_conv):
         if is_bmp:
-            bmp2grays.convertImage(1, "1bppR", filename, file_conv)
+            bmp2grays.convertImage(1, IMAGE_FORMAT, filename, file_conv)
         else:
             Image.open(filename).convert("RGB").save(os.path.join(IMAGE_WORKDIR, "tempConvert.bmp"))
-            bmp2grays.convertImage(1, "1bppR", os.path.join(IMAGE_WORKDIR, "tempConvert.bmp"), file_conv)
+            bmp2grays.convertImage(1, IMAGE_FORMAT, os.path.join(IMAGE_WORKDIR, "tempConvert.bmp"), file_conv)
             
         if compressionSupported == 1:
             file = open(file_conv,"rb")
