@@ -25,22 +25,55 @@ CMD_ERASE_INFOBLOCK = 27
 CMD_SAVE_MAC_FROM_FW = 40
 CMD_PASS_THROUGH = 50
 
-def print_arg_manual():
-    print("Manual: COM1 read/readI file.bin, or COM1 write/writeI file.bin 0 or slow_spi baudrate(default 115200) pass at the end for UART Pass Through mode")
-    print("Example: COM1 read file.bin slow_spi 115200 <- will read flash to file.bin with slow SPI and 115200 baud")
-    print("Example: COM1 write file.bin <- will write file.bin to flash with fast SPI and default 115200 baud")
-    print("Example: COM1 MAC <- will write the original MAC into the infopage")
-    print("Example: COM1 MAC 1234567890ABCDEF <- will write this 16 byte MAC into the infopage")
-    print("Not the right arguments but here are the... please wait...")
-    ports_list = "possible UART ports: "
+def print_arg_manual(exit_code=0):
+    print((
+'''USAGE
+{arg1} SERIAL_PORT ({{read|readI|write|writeI}} BINARY_FILE [slow_spi [BAUD_RATE; default=115200]] | MAC [16 char target MAC])
+
+DESCRIPTION
+This is a program to flash the ZBS243 / SEM9110 8051 microcontroller.
+
+Use it to read or write firmware and infopages from and to the controller.
+To keep the MAC address from stock firmware, copy it BEFORE flashing a new firmware.
+The original MAC is only 12 characters in length and will be prefixed by four zeroes.
+
+EXAMPLES
+    {arg1} COM1 read firmware.bin
+    # dump firmware from chip on COM1 into firmware.bin
+
+    {arg1} COM1 readI infopage.bin slow_spi 115200
+    # dump infopage from chip into infopage.bin
+
+    {arg1} COM1 MAC
+    # read the mac from firmware and copy to infopage (only works on stock firmware)
+
+    {arg1} COM1 MAC 1234567890ABCDEF
+    # write specified MAC to infopage
+
+AUTHOR
+Aaron Christophel https://ATCnetz.de
+
+SEE ALSO
+Further documentation can be found here:
+https://github.com/atc1441/ZBS_Flasher
+
+''').format(arg1=sys.argv[0])
+)
+
+    ports_list = "Available serial ports: "
     for port in serial.tools.list_ports.comports():
         ports_list += port.device + " "
     print(ports_list)
-    exit()
-    
+    exit(exit_code)
+
 if (len(sys.argv) == 1):
     print_arg_manual()
-        
+elif(len(sys.argv) == 2):
+    if (sys.argv[1] == "--help" or sys.argv[1] == "-h" ):
+        print_arg_manual()
+    print("Error: no operation was provided\n\n")
+    print_arg_manual(1)
+
 custom_mac = "ffffffffffffffff"
 file = ""
 usedCom = sys.argv[1]  # "COM5"
@@ -54,20 +87,20 @@ if(sys.argv[2].lower() == "mac".lower()):
     elif(len(sys.argv)==4):
         custom_mac = sys.argv[3].lower()
         if(len(custom_mac) != 16):
-            print("Mac not 16 bytes long")
-            print_arg_manual()
+            print("MAC not 16 bytes long")
+            print_arg_manual(2)
         if(custom_mac.lower() == "ffffffffffffffff".lower()):
-            print("Mac should not be ff's only")
-            print_arg_manual()
-        file = mac_folder + custom_mac + ".bin"   
-        print("going to flash custom MAC: " + custom_mac)    
+            print("MAC should not be ff's only")
+            print_arg_manual(3)
+        file = mac_folder + custom_mac + ".bin"
+        print("going to flash custom MAC: " + custom_mac)
     else:
-        print_arg_manual()
+        print_arg_manual(4)
 else:
     if (len(sys.argv) < 4):
-        print_arg_manual()
+        print_arg_manual(5)
     file = sys.argv[3]
- 
+
 
 spi_speed = 0
 after_work_pass_through = 0
@@ -80,9 +113,8 @@ if len(sys.argv) >= 5:
 
 if len(sys.argv) >= 6:
     usedBaud = int(sys.argv[5])
-    print("Using custom baudrate: " + str(usedBaud))
+    print("Using custom baudrate: {}".format(str(usedBaud)))
 
-    
 serialPort = serial.Serial(usedCom, usedBaud, serial.EIGHTBITS,
                            serial.PARITY_NONE, serial.STOPBITS_ONE, timeout=2)
 print('Using port: {}'.format(usedCom))
@@ -245,10 +277,10 @@ def zbs_read_flash(addr, len):
     #print("Reading flash at " + str(addr) + " len " + str(len))
     while(retry):
         if len > 0xff:
-            print("error len to long")
+            print("Error: len to long")
             return [2]
         if addr + len > 0x10000:
-            print("error addr to high")
+            print("Error: addr to high")
             return [3]
         send_cmd(CMD_READ_FLASH, bytearray(
             [len, (addr >> 8) & 0xff, addr & 0xff]))
@@ -261,14 +293,15 @@ def zbs_read_flash(addr, len):
 
 def zbs_write_flash(addr, len, data):
     retry = 3
-    #print("Writing flash at " + str(addr) + " len " + str(len))
+    #print("\n")
+    # print("Writing flash at " + str(addr) + " len " + str(len))
     #print("Len: " + str(len) + " : "+' '.join(format(x, '02x') for x in data))
     while(retry):
         if len > 250:
-            print("error len to long")
+            print("Error: len to long")
             return [2]
         if addr + len > 0x10000:
-            print("error addr to high Addr: " + str(addr) +
+            print("Error: addr to high Addr: " + str(addr) +
                   " : Len: " + str(len) + " Position: " + str(addr+len))
             return [3]
         send_cmd(CMD_WRITE_FLASH, bytearray(
@@ -286,8 +319,8 @@ def zbs_write_flash(addr, len, data):
 def cmd_read():
     global file
     if zbs_select_flash_page(0)[0] != 0:
-        print("error selecting flash page")
-        exit()
+        print("Error: selecting flash page failed")
+        exit(6)
     print("Reading flash now")
     len_left = 0x10000
     position = 0
@@ -304,26 +337,30 @@ def cmd_read():
             dump_buffer += answer[1:]
             #print(' '.join(format(x, '02x') for x in answer))
         else:
-            print("Error dumping flash")
-            exit()
+            print("Error: dumping flash failed")
+            exit(7)
         position += curr_len
         len_left -= curr_len
-        print(str(position) + " /   " + str(0x10000) + "  " +
-              str(int((position/0x10000)*100)) + "% " + str(int((millis() - reading_start_time) / 1000)) + " seconds", end='\r', flush=True)
-    print("")
-    print("Reading flash done, now saving the file")
+        print("{position} / {max_size} {completion}% {time} seconds".format(
+            position=str(position),
+            max_size=str(0x10000),
+            completion=str(int((position/0x10000)*100)),
+            time=str(int((millis() - reading_start_time) / 1000))
+        ), end='\r', flush=True)
+    print(" ")
+    print("Reading flash done, saving the file...")
     file = open(file, "wb")
     file.write(bytearray(dump_buffer))
     file.close()
-    print("Saving file done, it took " +
-          str(int((millis()-reading_start_time)/1000)) + " seconds")
+    print("Saving file done, it took {} seconds"
+          .format(str(int((millis()-reading_start_time)/1000))))
 
 def cmd_readI():
     global file
     if zbs_select_flash_page(1)[0] != 0:
-        print("error selecting infopage page")
-        exit()
-    print("Reading infopage now")
+        print("Error: selecting infopage page failed")
+        exit(8)
+    print("Reading infopage...")
     len_left = 0x400
     position = 0
     curr_len = 0
@@ -339,39 +376,43 @@ def cmd_readI():
             dump_buffer += answer[1:]
             #print(' '.join(format(x, '02x') for x in answer))
         else:
-            print("Error dumping infopage")
-            exit()
+            print("Error: dumping infopage failed")
+            exit(9)
         position += curr_len
         len_left -= curr_len
-        print(str(position) + " /   " + str(0x400) + "  " +
-              str(int((position/0x400)*100)) + "% " + str(int((millis() - reading_start_time) / 1000)) + " seconds", end='\r', flush=True)
-    print("")
-    print("Reading infopage done, now saving the file")
+        print("{position} / {max_size} {completion}% {time} seconds".format(
+            position=str(position),
+            max_size=str(0x400),
+            completion=str(int((position/0x400)*100)),
+            time=str(int((millis() - reading_start_time) / 1000))
+        ),end='\r', flush=True)
+    print(" ")
+    print("Reading infopage done, saving the file...")
     file = open(file, "wb")
     file.write(bytearray(dump_buffer))
     file.close()
-    print("Saving file done, it took " +
-          str(int((millis()-reading_start_time)/1000)) + " seconds")
+    print("Saving file done, took {} seconds"
+    .format(str(int((millis()-reading_start_time)/1000))))
 
 def cmd_write():
     global file
-    print("Erasing flash now")
+    print("Erasing flash...")
     if zbs_select_flash_page(0)[0] != 0:
-        print("error selecting flash page")
-        exit()
+        print("Error: selecting flash page failed")
+        exit(10)
     if zbs_erase_flash()[0] != 0:
-        print("Some Error erasing")
-        exit()
-    print("Flashing file: "+file)
+        print("Error: erasing failed")
+        exit(11)
+    print("Flashing file: {}".format(file))
     in_file = open(file, "rb")
     data = bytearray(in_file.read())
     in_file.close()
     file_size = len(data)
     if file_size > 0x10000:
-        print("File is too big for flash " + str(file_size))
-        exit()
+        print("Error: file too big for flash ({} bytes in file, {} bytes available)".format(str(file_size), str(0x10000)))
+        exit(12)
     len_left = file_size
-    print("File size : " + str(len_left))
+    print("File size: {}".format(str(len_left)))
     curr_len = 0
     position = 0
     write_start_time = millis()
@@ -387,36 +428,47 @@ def cmd_write():
                 break
         if should_write == 1:
             if zbs_write_flash(position, curr_len, data[position:position+curr_len])[0] != 0:
-                print("error writing flash at " + str(position) + " /   " + str(file_size) + "  " +
-                      str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds")
-                exit()
+                print("Error: Flash write failed at {position} / {file_size} {completion}% {time} seconds"
+                .format(
+                    position=str(position),
+                    file_size=str(file_size),
+                    completion=str(int((position/file_size)*100)),
+                    time=str(int((millis() - write_start_time) / 1000))
+                ))
+                exit(13)
         position += curr_len
         len_left -= curr_len
-        print(str(position) + " /   " + str(file_size) + "  " +
-              str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds", end='\r', flush=True)
-    print("")
-    print("Writing done, it took " + str(int((millis()-write_start_time)/1000)) + " seconds")
+        print("{position} / {max_size} {completion}% {time} seconds".format(
+            position=str(position),
+            max_size=str(file_size),
+            completion=str(int((position/file_size)*100)),
+            time=str(int((millis() - write_start_time) / 1000))
+        ),end='\r', flush=True)
+    print(" ")
+    print("Writing done, took {} seconds"
+    .format(str(int((millis()-write_start_time)/1000))))
     print("Verfiy done and OK")
 
 def cmd_writeI():
     global file
-    print("Erasing infopage now")
+    print("Erasing infopage...")
     if zbs_select_flash_page(1)[0] != 0:
-        print("error selecting infopage page")
-        exit()
+        print("Error: selecting infopage page failed")
+        exit(14)
     if zbs_erase_infopage()[0] != 0:
-        print("Some Error erasing")
-        exit()
-    print("Flashing file: "+file)
+        print("Error: erasing failed")
+        exit(15)
+    print("Flashing file: {}".format(file))
     in_file = open(file, "rb")
     data = bytearray(in_file.read())
     in_file.close()
     file_size = len(data)
     if file_size > 0x400:
-        print("File is too big for infopage " + str(file_size))
-        exit()
+        print("File is too big for infopage ({} bytes in file, {} bytes available)"
+              .format(str(file_size), str(0x400)))
+        exit(16)
     len_left = file_size
-    print("File size : " + str(len_left))
+    print("File size: " + str(len_left))
     curr_len = 0
     position = 0
     write_start_time = millis()
@@ -432,28 +484,42 @@ def cmd_writeI():
                 break
         if should_write == 1:
             if zbs_write_flash(position, curr_len, data[position:position+curr_len])[0] != 0:
-                print("error writing infopage at " + str(position) + " /   " + str(file_size) + "  " +
-                      str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds")
-                exit()
+                print("Error: Infopage write failed at {position} / {file_size} {completion}% {time} seconds"
+                .format(
+                    position=str(position),
+                    file_size=str(file_size),
+                    completion=str(int((position/file_size)*100)),
+                    time=str(int((millis() - write_start_time) / 1000))
+                    ))
+                exit(17)
         position += curr_len
         len_left -= curr_len
-        print(str(position) + " /   " + str(file_size) + "  " +
-              str(int((position/file_size)*100)) + "% " + str(int((millis() - write_start_time) / 1000)) + " seconds", end='\r', flush=True)
-    print("")
-    print("Writing done, it took " + str(int((millis()-write_start_time)/1000)) + " seconds")
+        print("{position} / {max_size} {completion}% {time} seconds".format(
+            position=str(position),
+            max_size=str(file_size),
+            completion=str(int((position/file_size)*100)),
+            time=str(int((millis() - write_start_time) / 1000))
+        ),end='\r', flush=True)
+    print(" ")
+    print("Writing done, took {} seconds"
+          .format(str(int((millis()-write_start_time)/1000))))
     print("Verfiy done and OK")
 
 uart_flush()
 
 zbs_version_answer = zbs_read_version()
 if zbs_version_answer[0] == 0 and len(zbs_version_answer) == 6:
-    print("ZBS Flasher version: " + str(zbs_version_answer[2]<<24|zbs_version_answer[3]<<16|zbs_version_answer[4]<<8|zbs_version_answer[5]))
+    print("ZBS Flasher version: {}"
+          .format(str(zbs_version_answer[2]<<24|
+                      zbs_version_answer[3]<<16|
+                      zbs_version_answer[4]<<8|
+                      zbs_version_answer[5])))
 else:
-    print("Failed to read ZBS Flasher version")
+    print("Warning: failed to read ZBS Flasher version")
 
 if zbs_init()[0] != 0:
-    print("Some Error in init")
-    exit()
+    print("Error: initialization failed")
+    exit(18)
 
 if (read_or_write.lower() == 'mac'.lower()):
     if(custom_mac.lower() == "ffffffffffffffff".lower()):
@@ -462,13 +528,13 @@ if (read_or_write.lower() == 'mac'.lower()):
         if answer_array[2] == 1:
             print("Saved MAC from stock FW to infoblock, ready to flash custom firmware")
             exit()
-        print("Error saving mac from stock FW to infoblock")
-        exit()
+        print("Error: saving MAC from stock FW to infoblock failed")
+        exit(19)
     else:
         if not(os.path.exists(mac_folder)):
             os.mkdir(mac_folder)
         cmd_readI()
-        file = mac_folder + custom_mac + ".bin" # needs to be set again 
+        file = mac_folder + custom_mac + ".bin" # needs to be set again
         fh = open(file, "r+b")
         fh.seek(0x10)
         fh.write(bytes.fromhex(custom_mac)[::-1])
@@ -488,9 +554,9 @@ elif(read_or_write.lower() == 'writeI'.lower()):
     cmd_writeI()
 
 if zbs_reset()[0] == 0:
-    print("ZBS Reset")
+    print("ZBS reset")
 else:
-    print("error while Reseting")
+    print("Error: reset failed")
 
 if after_work_pass_through == 1:
     if zbs_flasher_enter_pass_through()[0] == 0:
@@ -503,7 +569,6 @@ if after_work_pass_through == 1:
                 except:
                     pass
     else:
-        print("error entering Pass Through mode")
-      
+        print("Error: entering Pass Through mode failed")
 
 serialPort.close()
