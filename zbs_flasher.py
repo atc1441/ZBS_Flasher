@@ -38,16 +38,16 @@ To keep the MAC address from stock firmware, copy it BEFORE flashing a new firmw
 The original MAC is only 12 characters in length and will be prefixed by four zeroes.
 
 EXAMPLES
-    COM1 read firmware.bin
+    {arg1} COM1 read firmware.bin
     # dump firmware from chip on COM1 into firmware.bin
 
-    COM1 readI infopage.bin slow_spi 115200
+    {arg1} COM1 readI infopage.bin slow_spi 115200
     # dump infopage from chip into infopage.bin
 
-    COM1 MAC
+    {arg1} COM1 MAC
     # read the mac from firmware and copy to infopage (only works on stock firmware)
 
-    COM1 MAC 1234567890ABCDEF
+    {arg1} COM1 MAC 1234567890ABCDEF
     # write specified MAC to infopage
 
 AUTHOR
