@@ -189,8 +189,8 @@
 		content += "HwType: " + data.substring(36,38) + data.substring(34,36) + "<br>";
 		content += "Battery: " + parseInt(Number("0x" + data.substring(40,42) + data.substring(38,40)), 10) + "mV<br>";
 		content += "LQI: " + parseInt(Number("0x" + data.substring(42,44)), 10);
-        var rssi = parseInt(Number("0x" + data.substring(44, 46)), 10);
-        if (rssi > 127) rssi -= 255;
+		var rssi = parseInt(Number("0x" + data.substring(44, 46)), 10);
+		if (rssi > 127) rssi -= 255;
 		content += " RSSI: " + rssi + "<br>";
 		content += "Temperature: " + parseInt(Number("0x" + data.substring(46,48)), 10) + "<br>";
 		content += "<img onerror=\"this.onerror=null; this.src='no_img.jpg'\" style='width: 128px; height: 128px; object-fit: contain' src='input_img/" + data.substring(0,16) + ".png?temp=" + Date.now() + "'>";
