@@ -6,7 +6,7 @@ This firmware is meant to be compiled with the [Ti CCS IDE](https://www.ti.com/t
 
 The Precompiled .out or .hex files can be flashed via UART [FLASH-PROGRAMMER-2](https://www.ti.com/tool/download/FLASH-PROGRAMMER-2/1.8.2) or JTAG/cJTAG (With a compatible flasher like Segger)
 
-This firmware will emulate the TiMAC UART Protocol and allows to send and receive RAM 802.15.4 Packets
+This firmware will emulate the TiMAC UART Protocol and allows to send and receive RAW 802.15.4(ZigBee) Packets
 the UART protocol is just as much implementet so that the E-Paper Station will work without problems.
 
 See a demo of it running on an Sonoff CC2652P USB Stick:
