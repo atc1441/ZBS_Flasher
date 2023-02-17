@@ -239,7 +239,7 @@ def init(port, pan_id, channel, ext_add, pk, loop_cb):
     loop_callback = loop_cb
 
     global ser
-    ser = serial.Serial(port, timeout=0.1)
+    ser = serial.Serial(port, 115200, timeout=0.1)
     ser.flushInput()
 
     ext_add.reverse()
