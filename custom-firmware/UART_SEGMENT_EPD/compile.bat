@@ -2,4 +2,4 @@
 make rembin all
 make clean
 
-zbs_flasher.exe COM56 write main.bin
+zbs_flasher.exe -p COM17 write main.bin reset monitor

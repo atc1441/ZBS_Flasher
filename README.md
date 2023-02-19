@@ -59,7 +59,7 @@ It is written for the ESP32 but should run basically on any SOC with ~8 GPIOS an
   
   After that you can use the python tool zbs_flasher.py(zbs_flasher.exe precompiled, may triggers Anti Virus software) with the following parameter:
   
-    zbs_flasher COMxx read/write/readI/writeI file.bin <- file from where to read or write to
+    zbs_flasher -p COMxx read write read-infopage write-infopage file.bin reset
   
   The Pinout on how to connect the ZBS243 SOC is in this README or readable in the main.cpp file and can be changed to any wanted GPIOs of the ESP32.
   
