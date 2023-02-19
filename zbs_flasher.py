@@ -180,8 +180,7 @@ def main(ctx, port, baudrate, slow):
         click.echo("No Serial port given, trying to guess...")
         port = guess_port()
         if port is None:
-            click.echo("No suitable port found, please specify one and try again")
-            sys.exit(1)
+            raise click.ClickException("No suitable port found, please specify one and try again")
 
     click.echo(f"Using port {port}")
     try:
@@ -194,8 +193,7 @@ def main(ctx, port, baudrate, slow):
             timeout=2
         )
     except SerialException as e:
-        click.echo(f"Could not open serial port: {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Could not open serial port: {str(e)}")
     ctx.obj = ZBSFlasher(serial_port, slow)
     ctx.obj.flush()
 
@@ -208,7 +206,6 @@ def main(ctx, port, baudrate, slow):
 @click.pass_obj
 def version(obj: ZBSFlasher):
     click.echo(f"Flasher Version: {obj.version()}")
-    sys.exit(0)
 
 
 @main.command(help='Sets or copies the MAC address')
@@ -225,20 +222,20 @@ def version(obj: ZBSFlasher):
 @click.pass_context
 def mac(ctx, obj: ZBSFlasher, mac_address: str, backup_directory):
     os.makedirs(backup_directory, exist_ok=True)
-
-    obj.init()
+    try:
+        obj.init()
+    except CommunicationError as e:
+        raise click.ClickException(str(e))
 
     if mac_address:
         try:
             mac_address = mac_address.replace('-', '')
             mac_address = bytes.fromhex(mac_address)
         except ValueError as e:
-            click.echo(f"Invalid MAC address {mac_address}: {str(e)}")
-            sys.exit(1)
+            raise click.ClickException(f"Invalid MAC address '{mac_address}': {str(e)}")
 
         if len(mac_address) != 8:
-            click.echo("MAC address must be 8 bytes long.", err=True)
-            sys.exit(1)
+            raise click.ClickException("MAC address must be 8 bytes long.")
 
         click.echo(f"Writing MAC address '{mac_address.hex('-')}' to infopage")
 
@@ -259,17 +256,24 @@ def mac(ctx, obj: ZBSFlasher, mac_address: str, backup_directory):
 @click.argument('dest', type=click.File('wb'))
 @click.pass_obj
 def read(obj: ZBSFlasher, dest):
-    obj.init()
+    try:
+        obj.init()
+    except CommunicationError as e:
+        raise click.ClickException(str(e))
 
     try:
         obj.select_flash_page(0)
     except CommunicationError as e:
-        click.echo(f"Error selecting flash page {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error selecting flash page {str(e)}")
     with click.progressbar(range(0, obj.flash_size, 0xff), label=f"Reading into {dest.name}") as bar:
         for position in bar:
             read_length = min(0xff, obj.flash_size - position)
             dump_buffer = obj.read_flash(position, read_length)
+            if len(dump_buffer) != read_length:
+                raise click.ClickException(
+                    f"Reading flash failed at 0x{position:05x} "
+                    f"tried to read {read_length} bytes, only {len(dump_buffer)} bytes read"
+                )
             dest.write(dump_buffer)
     click.echo("All done!")
 
@@ -278,16 +282,25 @@ def read(obj: ZBSFlasher, dest):
 @click.argument('dest', type=click.File('wb'))
 @click.pass_obj
 def read_infopage(obj: ZBSFlasher, dest):
-    obj.init()
+    try:
+        obj.init()
+    except CommunicationError as e:
+        raise click.ClickException(str(e))
+
     try:
         obj.select_flash_page(1)
     except CommunicationError as e:
-        click.echo(f"Error selecting flash page {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error selecting flash page {str(e)}")
+
     with click.progressbar(range(0, 0x400, 0xff), label=f"Reading into {dest.name}") as bar:
         for position in bar:
             read_length = min(0xff, 0x400 - position)
             dump_buffer = obj.read_flash(position, read_length)
+            if len(dump_buffer) != read_length:
+                raise click.ClickException(
+                    f"Reading infopage failed at 0x{position:03x} "
+                    f"tried to read {read_length} bytes, only {len(dump_buffer)} bytes read"
+                )
             dest.write(dump_buffer)
     click.echo("All done!")
 
@@ -296,37 +309,43 @@ def read_infopage(obj: ZBSFlasher, dest):
 @click.argument('src', type=click.File('rb'))
 @click.pass_obj
 def write(obj: ZBSFlasher, src):
-    obj.init()
+    try:
+        obj.init()
+    except CommunicationError as e:
+        raise click.ClickException(str(e))
 
     try:
         obj.select_flash_page(0)
     except CommunicationError as e:
-        click.echo(f"Error selecting flash page {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error selecting flash page {str(e)}")
+
     click.echo("Erasing flash... ", nl=False)
 
     try:
         obj.erase_flash()
     except CommunicationError as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error: {str(e)}")
 
     click.echo("Done.")
     data = src.read()
     image_size = len(data)
     if image_size > obj.flash_size:
-        click.echo(f"Image is to big {image_size:05x} > {obj.flash_size:05x}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Image is to big {image_size:05x} > {obj.flash_size:05x}")
 
     chunk_length = 250
 
     with click.progressbar(range(0, image_size, chunk_length), label=f"Writing {src.name} to Flash") as bar:
         for position in bar:
             write_length = min(chunk_length, image_size - position)
-            obj.write_flash(
-                address=position,
-                data=data[position:position + write_length]
-            )
+            try:
+                obj.write_flash(
+                    address=position,
+                    data=data[position:position + write_length]
+                )
+            except CommunicationError as e:
+                raise click.ClickException(
+                    f"Writing to flash failed at 0x{position:05x} tried to write {write_length} bytes: {str(e)}"
+                )
 
     click.echo("All done!")
 
@@ -335,39 +354,44 @@ def write(obj: ZBSFlasher, src):
 @click.argument('src', type=click.File('rb'))
 @click.pass_obj
 def write_infopage(obj: ZBSFlasher, src):
-    obj.init()
+    try:
+        obj.init()
+    except CommunicationError as e:
+        raise click.ClickException(str(e))
 
     try:
         obj.select_flash_page(1)
     except CommunicationError as e:
-        click.echo(f"Error selecting flash page {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error selecting flash page {str(e)}")
 
     click.echo("Erasing infopage... ", nl=False)
 
     try:
         obj.erase_infopage()
     except CommunicationError as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error: {str(e)}")
 
     click.echo("Done.")
 
     data = src.read()
     image_size = len(data)
     if image_size > obj.info_size:
-        click.echo(f"Image is to big {image_size:05x} > {obj.info_size:05x}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Image is to big {image_size:05x} > {obj.info_size:05x}")
 
     chunk_length = 250
 
-    with click.progressbar(range(0, image_size, chunk_length), label=f"Writing {src.name} to Infopage") as bar:
+    with click.progressbar(range(0, image_size, chunk_length), label=f"Writing {src.name} to infopage") as bar:
         for position in bar:
             write_length = min(chunk_length, image_size - position)
-            obj.write_flash(
-                address=position,
-                data=data[position:position + write_length]
-            )
+            try:
+                obj.write_flash(
+                    address=position,
+                    data=data[position:position + write_length]
+                )
+            except CommunicationError as e:
+                raise click.ClickException(
+                    f"Writing to infopage failed at 0x{position:05x} tried to write {write_length} bytes: {str(e)}"
+                )
 
     click.echo("All done!")
 
@@ -379,24 +403,20 @@ def reset(obj: ZBSFlasher):
     try:
         obj.reset()
     except CommunicationError as e:
-        click.echo(f"Error: {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error: {str(e)}")
 
     click.echo("Done.")
 
 
 @main.command(help="Enters passthrough mode")
 @click.pass_obj
-@click.pass_context
-def monitor(ctx, obj: ZBSFlasher):
-    ctx.invoke(reset)
+def monitor(obj: ZBSFlasher):
     click.echo("Entering passthrough mode")
     try:
         obj.enter_passthrough_mode()
     except CommunicationError as e:
-        click.echo(f"Error reading from device {str(e)}", err=True)
-        sys.exit(1)
+        raise click.ClickException(f"Error reading from device {str(e)}")
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()
