@@ -12,6 +12,7 @@ import sys
 
 import click
 import serial.tools.list_ports
+from serial import SerialException
 
 NUM_RETRIES = 3
 
@@ -148,7 +149,13 @@ class ZBSFlasher:
         self._query(CMD_PASS_THROUGH)
         self._serial.timeout = 0.5  # set the timeout to something low, so we don't lag too much.
         while True:
-            sys.stdout.write(self._serial.read(128))
+            try:
+                data = self._serial.read(128)
+                sys.stdout.buffer.write(data)
+                sys.stdout.buffer.flush()
+            except SerialException as e:
+                return CommunicationError(str(e))
+
 
 
 def guess_port():
@@ -161,7 +168,7 @@ def guess_port():
             return port.device
 
 
-@click.group(help="Utility to flash ZBS243 / SEM9110 8051 microcontrollers")
+@click.group(help="Utility to flash ZBS243 / SEM9110 8051 microcontrollers", chain=True)
 @click.option('-p', '--port', 'port', type=str, help="Serial Port")
 @click.option('-b', '--baudrate', 'baudrate', default=115200, type=int, help="serial baudrate, default: 115200")
 @click.option('--slow', is_flag=True, help="Use slower SPI speed, helpful if you use long cables")
@@ -173,17 +180,21 @@ def main(ctx, port, baudrate, slow):
         port = guess_port()
         if port is None:
             click.echo("No suitable port found, please specify one and try again")
-            return 1
+            sys.exit(1)
 
     click.echo(f"Using port {port}")
-    serial_port = serial.Serial(
-        port,
-        baudrate,
-        serial.EIGHTBITS,
-        serial.PARITY_NONE,
-        serial.STOPBITS_ONE,
-        timeout=2
-    )
+    try:
+        serial_port = serial.Serial(
+            port,
+            baudrate,
+            serial.EIGHTBITS,
+            serial.PARITY_NONE,
+            serial.STOPBITS_ONE,
+            timeout=2
+        )
+    except SerialException as e:
+        click.echo(f"Could not open serial port: {str(e)}", err=True)
+        sys.exit(1)
     ctx.obj = ZBSFlasher(serial_port, slow)
     ctx.obj.flush()
 
@@ -196,7 +207,7 @@ def main(ctx, port, baudrate, slow):
 @click.pass_obj
 def version(obj: ZBSFlasher):
     click.echo(f"Flasher Version: {obj.version()}")
-    return 0
+    sys.exit(0)
 
 
 @main.command(help='Sets or copies the MAC address')
@@ -215,106 +226,96 @@ def mac(ctx, obj: ZBSFlasher, mac_address: str, backup_directory):
     os.makedirs(backup_directory, exist_ok=True)
 
     obj.init()
+
     if mac_address:
         try:
             mac_address = mac_address.replace('-', '')
             mac_address = bytes.fromhex(mac_address)
         except ValueError as e:
             click.echo(f"Invalid MAC address {mac_address}: {str(e)}")
-            return 1
+            sys.exit(1)
 
         if len(mac_address) != 8:
             click.echo("MAC address must be 8 bytes long.", err=True)
-            return 1
+            sys.exit(1)
 
         click.echo(f"Writing MAC address '{mac_address.hex('-')}' to infopage")
 
         filename = os.path.join(backup_directory, mac_address.hex() + ".bin")
 
         with open(filename, 'wb') as fh:
-            ctx.invoke(read_infopage, dest=fh, do_reset=False)
+            ctx.invoke(read_infopage, dest=fh)
             fh.seek(0x10)
             fh.write(mac_address[::-1])
 
         with open(filename, 'rb') as fh:
-            ctx.invoke(write_infopage, src=fh, do_reset=False)
+            ctx.invoke(write_infopage, src=fh)
     else:
         obj.copy_mac_from_firmware()
-    ctx.invoke(reset)
 
 
 @main.command(help="Reads the flash memory")
 @click.argument('dest', type=click.File('wb'))
 @click.pass_obj
-@click.pass_context
-def read(ctx, obj: ZBSFlasher, dest, do_reset=True):
+def read(obj: ZBSFlasher, dest):
     obj.init()
 
     try:
         obj.select_flash_page(0)
     except CommunicationError as e:
         click.echo(f"Error selecting flash page {str(e)}", err=True)
-        exit()
+        sys.exit(1)
     with click.progressbar(range(0, obj.flash_size, 0xff), label=f"Reading into {dest.name}") as bar:
         for position in bar:
             read_length = min(0xff, obj.flash_size - position)
             dump_buffer = obj.read_flash(position, read_length)
             dest.write(dump_buffer)
     click.echo("All done!")
-    if do_reset:
-        ctx.invoke(reset)
-    return 0
 
 
 @main.command(help="Reads the infopage")
 @click.argument('dest', type=click.File('wb'))
 @click.pass_obj
-@click.pass_context
-def read_infopage(ctx, obj: ZBSFlasher, dest, do_reset=True):
+def read_infopage(obj: ZBSFlasher, dest):
     obj.init()
-
     try:
         obj.select_flash_page(1)
     except CommunicationError as e:
         click.echo(f"Error selecting flash page {str(e)}", err=True)
-        exit()
+        sys.exit(1)
     with click.progressbar(range(0, 0x400, 0xff), label=f"Reading into {dest.name}") as bar:
         for position in bar:
             read_length = min(0xff, 0x400 - position)
             dump_buffer = obj.read_flash(position, read_length)
             dest.write(dump_buffer)
     click.echo("All done!")
-    if do_reset:
-        ctx.invoke(reset)
-    return 0
 
 
 @main.command(help="Writes the file to flash")
 @click.argument('src', type=click.File('rb'))
 @click.pass_obj
-@click.pass_context
-def write(ctx, obj: ZBSFlasher, src, do_reset=True):
+def write(obj: ZBSFlasher, src):
     obj.init()
 
     try:
         obj.select_flash_page(0)
     except CommunicationError as e:
         click.echo(f"Error selecting flash page {str(e)}", err=True)
-        return 1
+        sys.exit(1)
     click.echo("Erasing flash... ", nl=False)
 
     try:
         obj.erase_flash()
     except CommunicationError as e:
         click.echo(f"Error: {str(e)}", err=True)
-        return 1
+        sys.exit(1)
 
     click.echo("Done.")
     data = src.read()
     image_size = len(data)
     if image_size > obj.flash_size:
         click.echo(f"Image is to big {image_size:05x} > {obj.flash_size:05x}", err=True)
-        return 1
+        sys.exit(1)
 
     chunk_length = 250
 
@@ -327,23 +328,19 @@ def write(ctx, obj: ZBSFlasher, src, do_reset=True):
             )
 
     click.echo("All done!")
-    if do_reset:
-        ctx.invoke(reset)
-    return 0
 
 
 @main.command(help="Writes the file to the infopage")
 @click.argument('src', type=click.File('rb'))
 @click.pass_obj
-@click.pass_context
-def write_infopage(ctx, obj: ZBSFlasher, src, do_reset=True):
+def write_infopage(obj: ZBSFlasher, src):
     obj.init()
 
     try:
         obj.select_flash_page(1)
     except CommunicationError as e:
         click.echo(f"Error selecting flash page {str(e)}", err=True)
-        return 1
+        sys.exit(1)
 
     click.echo("Erasing infopage... ", nl=False)
 
@@ -351,7 +348,7 @@ def write_infopage(ctx, obj: ZBSFlasher, src, do_reset=True):
         obj.erase_infopage()
     except CommunicationError as e:
         click.echo(f"Error: {str(e)}", err=True)
-        return 1
+        sys.exit(1)
 
     click.echo("Done.")
 
@@ -359,7 +356,7 @@ def write_infopage(ctx, obj: ZBSFlasher, src, do_reset=True):
     image_size = len(data)
     if image_size > obj.info_size:
         click.echo(f"Image is to big {image_size:05x} > {obj.info_size:05x}", err=True)
-        return 1
+        sys.exit(1)
 
     chunk_length = 250
 
@@ -373,11 +370,6 @@ def write_infopage(ctx, obj: ZBSFlasher, src, do_reset=True):
 
     click.echo("All done!")
 
-    if do_reset:
-        ctx.invoke(reset)
-
-    return 0
-
 
 @main.command(help="Resets the target processor")
 @click.pass_obj
@@ -387,16 +379,22 @@ def reset(obj: ZBSFlasher):
         obj.reset()
     except CommunicationError as e:
         click.echo(f"Error: {str(e)}", err=True)
-        return 1
+        sys.exit(1)
 
     click.echo("Done.")
 
 
 @main.command(help="Enters passthrough mode")
 @click.pass_obj
-def monitor(obj: ZBSFlasher):
+@click.pass_context
+def monitor(ctx, obj: ZBSFlasher):
+    ctx.invoke(reset)
     click.echo("Entering passthrough mode")
-    obj.enter_passthrough_mode()
+    try:
+        obj.enter_passthrough_mode()
+    except CommunicationError as e:
+        click.echo(f"Error reading from device {str(e)}", err=True)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
