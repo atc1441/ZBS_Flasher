@@ -97,7 +97,9 @@ class ZBSFlasher:
         slow_spi = 0
         if self._slow_spi:
             slow_spi = 1
-        return self._query(CMD_ZBS_BEGIN, bytearray([slow_spi]))
+        result = self._query(CMD_ZBS_BEGIN, bytearray([slow_spi]))
+        if result[0] != 1:
+            raise CommunicationError("Initialisation failed, is a device connected?")
 
     def version(self):
         return struct.unpack(">I", self._query(CMD_GET_VERSION))[0]
@@ -155,7 +157,6 @@ class ZBSFlasher:
                 sys.stdout.buffer.flush()
             except SerialException as e:
                 return CommunicationError(str(e))
-
 
 
 def guess_port():
