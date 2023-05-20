@@ -28,8 +28,13 @@ uint8_t ZBS_interface::begin(uint8_t SS, uint8_t CLK, uint8_t MOSI, uint8_t MISO
     digitalWrite(_MOSI_PIN, HIGH);
     if (!_soft_spi)
     {
+
+#ifndef ZBS_SPI_BUS
+#define ZBS_SPI_BUS VSPI
+#endif
+
 #ifdef ESP32
-        spi = new SPIClass(VSPI);
+        spi = new SPIClass(ZBS_SPI_BUS);
 #else
         spi = new SPIClass();
 #endif

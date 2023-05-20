@@ -6,36 +6,6 @@
 #include "zbs_interface.h"
 #include "main.h"
 
-#ifdef ESP32
-
-#define LED 22
-
-#define ZBS_SS 23
-#define ZBS_CLK 18
-#define ZBS_MoSi 5
-#define ZBS_MiSo 17
-#define ZBS_Reset 19
-#define ZBS_POWER 16 //  do not connect directly to a GPIO only trough some kind of Mosfet or switch!
-
-#define ZBS_RXD 4 // Used to read UART data from the firmware running on the ZBS, not needed at all
-#define ZBS_TXD 2
-
-#else
-// defines for ESP8266
-#define LED -1
-
-#define ZBS_SS 15   // D8
-#define ZBS_CLK 14  // D5
-#define ZBS_MoSi 13 // D7
-#define ZBS_MiSo 12 // D6
-#define ZBS_Reset 0 // D3
-#define ZBS_POWER 4 // D2 //  do not connect directly to a GPIO only trough some kind of Mosfet or switch!
-
-#define ZBS_RXD -1 // Maybe later used to read UART data from the firmware running on the ZBS, not needed at all
-#define ZBS_TXD -1
-
-#endif
-
 uint32_t FLASHER_VERSION = 0x00000020;
 
 uint32_t spi_speed = 8000000; // Speed for hardware spi, default 8MHz can be set via the PC tool
@@ -401,7 +371,7 @@ void handle_uart_cmd(uint8_t cmd, uint8_t *cmd_buff, uint8_t len)
     digitalWrite(ZBS_RXD, LOW);
     pinMode(ZBS_TXD, INPUT);
     digitalWrite(ZBS_TXD, LOW);
-#else// Only ESP32 Support the second Serial 
+#else // Only ESP32 Support the second Serial
     temp_buff[0] = 0;
     send_uart_answer(cmd, temp_buff, 1);
 #endif
