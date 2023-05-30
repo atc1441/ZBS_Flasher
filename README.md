@@ -79,6 +79,7 @@ ALL VCC | VCC | ZBS243 Power | 16 !!!* | 4 !!!* | 14 through 19
 *  do not connect VCC directly to a GPIO only trough some kind of Mosfet or switch!
 
 Example power switching circuit with ESP32 Lolin Lite:
+
 LDO: https://www.lcsc.com/product-detail/_Shanghai-Siproin-Microelectronics-_C411022.html
 
 <img width="600" alt="PogoFlasher_ZBS243_Power_switching_circuit" src="pictures/PogoFlasher_ZBS243_Power_switching_circuit.jpg">
