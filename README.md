@@ -78,6 +78,11 @@ ALL VCC | VCC | ZBS243 Power | 16 !!!* | 4 !!!* | 14 through 19
 
 *  do not connect VCC directly to a GPIO only trough some kind of Mosfet or switch!
 
+Example power switching circuit with ESP32 Lolin Lite:
+LDO: https://www.lcsc.com/product-detail/_Shanghai-Siproin-Microelectronics-_C411022.html
+
+<img width="600" alt="PogoFlasher_ZBS243_Power_switching_circuit" src="pictures/PogoFlasher_ZBS243_Power_switching_circuit.jpg">
+
 # Debugging and power options on the Arduino Nano - flasher
 There are some basic options to test the tag while connected to the flasher. Highly experimental! Use a serial terminal on 115200 baud and use hit '?' to see the options.
 - Serial passthrough kinda works, but bit-bangs inputs and outputs and is somewhat shaky in its timings. Probably better to use an ESP32 with a second serial port for that.
