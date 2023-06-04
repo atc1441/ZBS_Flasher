@@ -4,6 +4,11 @@
 [CC2531_station](../CC2531_station/)
 
 
+Here is a YouTube video that shows the general function and firmware flashing
+https://youtu.be/98fOzZs__fc
+
+[![YoutubeVideo](https://img.youtube.com/vi/98fOzZs__fc/0.jpg)](https://www.youtube.com/watch?v=98fOzZs__fc)
+
 # Precompiled custom firmware
 ## For a simple starting point and direct testing of the labels use this precompiled firmwares for the 2.9" ST-GR29000 Label with a few modifications from @atc1441
 
