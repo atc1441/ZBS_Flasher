@@ -58,7 +58,25 @@ void ZBS_interface::set_power(uint8_t state)
     if (_POWER_PIN != -1)
     {
         pinMode(_POWER_PIN, OUTPUT);
+        #ifdef ZBS_POWER1
+        pinMode(ZBS_POWER1, OUTPUT);
+        #endif
+        #ifdef ZBS_POWER2
+        pinMode(ZBS_POWER2, OUTPUT);
+        #endif
+        #ifdef ZBS_POWER3
+        pinMode(ZBS_POWER3, OUTPUT);
+        #endif
         digitalWrite(_POWER_PIN, state);
+        #ifdef ZBS_POWER1
+        digitalWrite(ZBS_POWER1, state);
+        #endif
+        #ifdef ZBS_POWER2
+        digitalWrite(ZBS_POWER2, state);
+        #endif
+        #ifdef ZBS_POWER3
+        digitalWrite(ZBS_POWER3, state);
+        #endif
     }
 }
 
