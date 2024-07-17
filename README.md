@@ -65,6 +65,20 @@ It is written for the ESP32 but should run basically on any SOC with ~8 GPIOS an
   
   The "ZBS_POWER" pin is used to reset the SOC after any debug mode action like flashing etc. the SOC is stuck in debug mode and can only exit from it via a power cycle so it is adviced to connect the power to the SOC via an transistor to automaticaly have it exit the debug mode and run the firmware. The power cycle can also be done manually.
 
+### Common examples
+
+Wirte firmware and copy MAC adress (mac before the write command)
+
+```
+zbs_flasher -p COMxx mac write .\SOL_M2_154_SSD_26.bin
+```
+
+Set new MAC adress (with four padded zeros)
+
+```
+zbs_flasher -p COMxx mac --mac 000002A9BBBBAAAA
+```
+
 
 # Pins:
 ZBS243 Pin                       |Pin name                       |Name                       |ESP32 Pin                       |ESP82622 Pin                     |Arduino Nano Pin
