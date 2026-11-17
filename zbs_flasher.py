@@ -319,18 +319,17 @@ def write(obj: ZBSFlasher, src):
     except CommunicationError as e:
         raise click.ClickException(f"Error selecting flash page {str(e)}")
 
-    click.echo("Erasing flash... ", nl=False)
-
-    try:
-        obj.erase_flash()
-    except CommunicationError as e:
-        raise click.ClickException(f"Error: {str(e)}")
-
-    click.echo("Done.")
     data = src.read()
     image_size = len(data)
     if image_size > obj.flash_size:
         raise click.ClickException(f"Image is to big {image_size:05x} > {obj.flash_size:05x}")
+
+    click.echo("Erasing flash... ", nl=False)
+    try:
+        obj.erase_flash()
+    except CommunicationError as e:
+        raise click.ClickException(f"Error: {str(e)}")
+    click.echo("Done.")
 
     chunk_length = 250
 
